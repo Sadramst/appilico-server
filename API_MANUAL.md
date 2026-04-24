@@ -82,7 +82,7 @@ POST /api/auth/login
 ```json
 {
   "email": "admin@appilico.com",
-  "password": "Admin123!@#"
+  "password": "Admin@123!"
 }
 ```
 
@@ -1756,13 +1756,13 @@ The database comes pre-seeded with these accounts:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@appilico.com` | `Admin123!@#` |
-| Manager | `manager@appilico.com` | `Manager123!@#` |
-| Customer | `customer1@appilico.com` | `Customer123!@#` |
-| Customer | `customer2@appilico.com` | `Customer123!@#` |
-| Customer | `customer3@appilico.com` | `Customer123!@#` |
-| Customer | `customer4@appilico.com` | `Customer123!@#` |
-| Customer | `customer5@appilico.com` | `Customer123!@#` |
+| Admin | `admin@appilico.com` | `Admin@123!` |
+| Manager | `manager@appilico.com` | `Manager@123!` |
+| Customer | `customer1@appilico.com` | `Customer@123!` |
+| Customer | `customer2@appilico.com` | `Customer@123!` |
+| Customer | `customer3@appilico.com` | `Customer@123!` |
+| Customer | `customer4@appilico.com` | `Customer@123!` |
+| Customer | `customer5@appilico.com` | `Customer@123!` |
 
 ### Pre-seeded Discount Codes
 
@@ -1806,7 +1806,7 @@ When rate limited, the API returns HTTP `429 Too Many Requests`.
 # 1. Login as admin
 curl -X POST {BASE_URL}/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@appilico.com","password":"Admin123!@#"}'
+  -d '{"email":"admin@appilico.com","password":"Admin@123!"}'
 
 # 2. Use the returned accessToken
 TOKEN="eyJhbGci..."
