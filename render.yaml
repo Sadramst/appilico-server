@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: appilico-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: JWT__Secret
+        sync: false
+      - key: Cloudinary__CloudName
+        sync: false
+      - key: Cloudinary__ApiKey
+        sync: false
+      - key: Cloudinary__ApiSecret
+        sync: false
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production

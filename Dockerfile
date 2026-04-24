@@ -36,7 +36,7 @@ RUN mkdir -p /app/Logs && chown -R appuser:appgroup /app/Logs
 USER appuser
 
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "Appilico.Server.API.dll"]
