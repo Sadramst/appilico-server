@@ -10,11 +10,13 @@ namespace Appilico.Server.API.Controllers;
 public class VouchersController : BaseApiController
 {
     private readonly IVoucherService _voucherService;
+    private readonly ICustomerService _customerService;
 
     /// <summary>Initializes VouchersController.</summary>
-    public VouchersController(IVoucherService voucherService)
+    public VouchersController(IVoucherService voucherService, ICustomerService customerService)
     {
         _voucherService = voucherService;
+        _customerService = customerService;
     }
 
     /// <summary>Get all vouchers.</summary>
@@ -69,5 +71,17 @@ public class VouchersController : BaseApiController
     {
         var result = await _voucherService.ValidateAsync(request);
         return Ok(result);
+    }
+
+    /// <summary>Redeem voucher.</summary>
+    [HttpPost("redeem")]
+    [Authorize]
+    public async Task<IActionResult> Redeem([FromBody] RedeemVoucherRequest request)
+    {
+        var customer = await _customerService.GetByUserIdAsync(GetUserId());
+        if (!customer.Success || customer.Data == null) return BadRequest(customer);
+
+        var result = await _voucherService.RedeemAsync(request, customer.Data.Id);
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 }

@@ -175,3 +175,6 @@ app.MapControllers();
 await DatabaseSeeder.SeedAsync(app.Services);
 
 app.Run();
+
+/// <summary>Entry point class for WebApplicationFactory.</summary>
+public partial class Program { }
