@@ -1,0 +1,84 @@
+using AutoMapper;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Appilico.Server.Business.DTOs.Category;
+using Appilico.Server.Business.Services;
+using Appilico.Server.Domain.Entities;
+using Appilico.Server.Domain.Interfaces;
+using Appilico.Server.UnitTests.Helpers;
+
+namespace Appilico.Server.UnitTests.Services;
+
+public class CategoryServiceTests
+{
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ICategoryRepository> _categoryRepoMock;
+    private readonly IMapper _mapper;
+    private readonly Mock<ILogger<CategoryService>> _loggerMock;
+    private readonly CategoryService _sut;
+
+    public CategoryServiceTests()
+    {
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _categoryRepoMock = new Mock<ICategoryRepository>();
+        _mapper = TestMapperConfig.CreateMapper();
+        _loggerMock = new Mock<ILogger<CategoryService>>();
+
+        _unitOfWorkMock.Setup(u => u.Categories).Returns(_categoryRepoMock.Object);
+
+        _sut = new CategoryService(_unitOfWorkMock.Object, _mapper, _loggerMock.Object);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ExistingCategory_ReturnsSuccess()
+    {
+        var categoryId = Guid.NewGuid();
+        var category = new Category { Id = categoryId, Name = "Electronics", IsActive = true, CreatedBy = "test" };
+        _categoryRepoMock.Setup(r => r.GetByIdAsync(categoryId)).ReturnsAsync(category);
+
+        var result = await _sut.GetByIdAsync(categoryId);
+
+        result.Success.Should().BeTrue();
+        result.Data!.Name.Should().Be("Electronics");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NonExistent_ReturnsFailure()
+    {
+        var categoryId = Guid.NewGuid();
+        _categoryRepoMock.Setup(r => r.GetByIdAsync(categoryId)).ReturnsAsync((Category?)null);
+
+        var result = await _sut.GetByIdAsync(categoryId);
+
+        result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ValidRequest_ReturnsSuccess()
+    {
+        var request = new CreateCategoryRequest { Name = "Clothing", Description = "Apparel", SortOrder = 1 };
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        var result = await _sut.CreateAsync(request, "user1");
+
+        result.Success.Should().BeTrue();
+        result.Data!.Name.Should().Be("Clothing");
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsAllCategories()
+    {
+        var categories = new List<Category>
+        {
+            new() { Id = Guid.NewGuid(), Name = "Cat1", IsActive = true, CreatedBy = "test" },
+            new() { Id = Guid.NewGuid(), Name = "Cat2", IsActive = true, CreatedBy = "test" }
+        };
+        _categoryRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(categories);
+
+        var result = await _sut.GetAllAsync();
+
+        result.Success.Should().BeTrue();
+        result.Data.Should().HaveCount(2);
+    }
+}
