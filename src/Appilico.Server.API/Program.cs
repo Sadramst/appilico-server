@@ -120,10 +120,24 @@ builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 // CORS
+var allowedOrigins = new[]
+{
+    "http://localhost:3000",
+    "https://appilico-client-aif9.vercel.app",
+    "https://appilico-client.vercel.app"
+};
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+                allowedOrigins.Contains(origin) ||
+                new Uri(origin).Host.EndsWith(".vercel.app"))
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 // Controllers
@@ -185,7 +199,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 app.UseIpRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
