@@ -107,9 +107,9 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
 
         // Add addresses for all customers
-        var cities = new[] { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix" };
-        var states = new[] { "NY", "CA", "IL", "TX", "AZ" };
-        var zips = new[] { "10001", "90001", "60601", "77001", "85001" };
+        var cities = new[] { "Perth", "Melbourne", "Sydney", "Brisbane", "Adelaide" };
+        var states = new[] { "WA", "VIC", "NSW", "QLD", "SA" };
+        var zips = new[] { "6000", "3000", "2000", "4000", "5000" };
         for (int i = 0; i < customers.Count; i++)
         {
             context.CustomerAddresses.Add(new CustomerAddress
@@ -117,11 +117,11 @@ public static class DatabaseSeeder
                 CustomerId = customers[i].Id,
                 AddressType = AddressType.Shipping,
                 Title = "Home",
-                AddressLine1 = $"{100 + i} Main Street",
+                AddressLine1 = $"{10 + i} High Street",
                 City = cities[i % cities.Length],
                 State = states[i % states.Length],
                 PostalCode = zips[i % zips.Length],
-                Country = "US",
+                Country = "AU",
                 IsDefault = true,
                 CreatedBy = "system"
             });
@@ -136,27 +136,38 @@ public static class DatabaseSeeder
 
         var topLevel = new List<Category>
         {
-            new() { Name = "Electronics", Description = "Electronic devices and gadgets", SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Clothing", Description = "Apparel and fashion", SortOrder = 2, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Home & Garden", Description = "Home improvement and garden", SortOrder = 3, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Sports & Outdoors", Description = "Sporting goods and outdoor equipment", SortOrder = 4, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Books & Media", Description = "Books, music, and media", SortOrder = 5, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Health & Beauty", Description = "Health care and beauty products", SortOrder = 6, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Toys & Games", Description = "Toys, games, and hobbies", SortOrder = 7, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Beef", Description = "Premium grain-fed and grass-fed beef cuts", ImageUrl = "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800", SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Lamb", Description = "Tender spring lamb sourced from local farms", ImageUrl = "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800", SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork", Description = "Free-range pork from trusted producers", ImageUrl = "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800", SortOrder = 3, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Poultry", Description = "Free-range chicken, duck and turkey", ImageUrl = "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800", SortOrder = 4, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Veal", Description = "Ethically raised premium veal", SortOrder = 5, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Sausages & Burgers", Description = "Handmade sausages and gourmet burger patties", ImageUrl = "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800", SortOrder = 6, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Deli & Cold Cuts", Description = "Cured meats, salumi, and antipasto platters", ImageUrl = "https://images.unsplash.com/photo-1544025162-d76694265947?w=800", SortOrder = 7, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Ready Meals", Description = "Chef-prepared meals ready to heat and serve", SortOrder = 8, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pantry", Description = "Artisan pasta, sauces, oils and condiments", SortOrder = 9, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Marinades & Rubs", Description = "House-made marinades, rubs and seasonings", SortOrder = 10, IsActive = true, CreatedBy = "system" },
         };
         context.Categories.AddRange(topLevel);
         await context.SaveChangesAsync();
 
         var subCats = new List<Category>
         {
-            new() { Name = "Smartphones", Description = "Mobile phones", ParentCategoryId = topLevel[0].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Laptops", Description = "Laptop computers", ParentCategoryId = topLevel[0].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Accessories", Description = "Electronic accessories", ParentCategoryId = topLevel[0].Id, SortOrder = 3, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Tablets", Description = "Tablet devices", ParentCategoryId = topLevel[0].Id, SortOrder = 4, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Men's Clothing", Description = "Men's apparel", ParentCategoryId = topLevel[1].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Women's Clothing", Description = "Women's apparel", ParentCategoryId = topLevel[1].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Furniture", Description = "Home furniture", ParentCategoryId = topLevel[2].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Kitchen", Description = "Kitchen appliances and tools", ParentCategoryId = topLevel[2].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            // Beef subs
+            new() { Name = "Beef Steaks", Description = "Premium steak cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Beef Roasting Joints", Description = "Slow roast and Sunday roast cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Beef Other Cuts", Description = "Mince, diced, strips and specialty cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 3, IsActive = true, CreatedBy = "system" },
+            // Lamb subs
+            new() { Name = "Lamb Chops & Cutlets", Description = "Chops, cutlets and racks", ParentCategoryId = topLevel[1].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Lamb Roasting Joints", Description = "Leg, shoulder and rolled roasts", ParentCategoryId = topLevel[1].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            // Pork subs
+            new() { Name = "Pork Steaks & Chops", Description = "Loin chops, steaks and cutlets", ParentCategoryId = topLevel[2].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork Roasting Joints", Description = "Rolled pork, rack and belly roasts", ParentCategoryId = topLevel[2].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            // Poultry subs
+            new() { Name = "Chicken Breast & Thigh", Description = "Skinless breast, thigh fillets and tenderloins", ParentCategoryId = topLevel[3].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Whole Birds", Description = "Whole chicken, spatchcock and duck", ParentCategoryId = topLevel[3].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            // Ready Meals subs
+            new() { Name = "Italian Classics", Description = "Lasagne, arancini, involtini and more", ParentCategoryId = topLevel[7].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Curries & Stews", Description = "Slow-cooked curries and hearty stews", ParentCategoryId = topLevel[7].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
         };
         context.Categories.AddRange(subCats);
         await context.SaveChangesAsync();
@@ -167,14 +178,12 @@ public static class DatabaseSeeder
         if (await context.Brands.AnyAsync()) return;
         var brands = new List<Brand>
         {
-            new() { Name = "TechPro", Description = "Premium technology products", IsActive = true, CreatedBy = "system" },
-            new() { Name = "StyleCo", Description = "Fashion and lifestyle brand", IsActive = true, CreatedBy = "system" },
-            new() { Name = "HomeEssentials", Description = "Home and living essentials", IsActive = true, CreatedBy = "system" },
-            new() { Name = "SportMax", Description = "Sports and fitness equipment", IsActive = true, CreatedBy = "system" },
-            new() { Name = "ReadMore", Description = "Books and publications", IsActive = true, CreatedBy = "system" },
-            new() { Name = "GlowUp", Description = "Beauty and skincare", IsActive = true, CreatedBy = "system" },
-            new() { Name = "FunZone", Description = "Toys and entertainment", IsActive = true, CreatedBy = "system" },
-            new() { Name = "NatureFit", Description = "Natural health products", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Primo Cuts", Description = "Our signature premium meat range", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Heritage Reserve", Description = "Dry-aged and specialty beef selection", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Valley Fresh", Description = "Free-range lamb and poultry from local farms", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Artisan Kitchen", Description = "Chef-prepared ready meals and deli items", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Rustic Pantry", Description = "Imported and artisan pantry goods", IsActive = true, CreatedBy = "system" },
+            new() { Name = "Grill Master", Description = "BBQ-ready sausages, burgers and marinades", IsActive = true, CreatedBy = "system" },
         };
         context.Brands.AddRange(brands);
         await context.SaveChangesAsync();
@@ -192,104 +201,114 @@ public static class DatabaseSeeder
 
         var products = new List<Product>
         {
-            // Electronics - Smartphones (5)
-            P("TechPro Smartphone X1", "Flagship smartphone with 6.7\" AMOLED display, 128GB", "TP-SM-001", cat("Smartphones"), brand("TechPro"), 999.99m, 650m, 50, 10, true, true),
-            P("TechPro Smartphone X1 Pro", "Pro variant with 256GB and triple camera", "TP-SM-002", cat("Smartphones"), brand("TechPro"), 1199.99m, 780m, 30, 5, true, true),
-            P("TechPro Smartphone Lite", "Budget-friendly smartphone", "TP-SM-003", cat("Smartphones"), brand("TechPro"), 399.99m, 200m, 100, 20, true, false),
-            P("TechPro Smartphone SE", "Compact smartphone with powerful specs", "TP-SM-004", cat("Smartphones"), brand("TechPro"), 599.99m, 350m, 60, 10, true, false),
-            P("TechPro Smartphone Fold", "Foldable smartphone", "TP-SM-005", cat("Smartphones"), brand("TechPro"), 1799.99m, 1100m, 15, 3, true, true),
+            // Beef Steaks (5)
+            P("Scotch Fillet Steak", "300g premium grain-fed scotch fillet, beautifully marbled", "PM-BS-001", cat("Beef Steaks"), brand("Primo Cuts"), 32.99m, 18m, 40, 5, true, true, 0.3m),
+            P("Eye Fillet Steak", "250g centre-cut eye fillet, the tenderest steak cut", "PM-BS-002", cat("Beef Steaks"), brand("Primo Cuts"), 38.99m, 22m, 30, 5, true, true, 0.25m),
+            P("T-Bone Steak", "450g bone-in T-bone with fillet and sirloin", "PM-BS-003", cat("Beef Steaks"), brand("Primo Cuts"), 29.99m, 16m, 35, 5, true, false, 0.45m),
+            P("Porterhouse Steak", "350g thick-cut porterhouse, perfect for grilling", "PM-BS-004", cat("Beef Steaks"), brand("Primo Cuts"), 27.99m, 14m, 45, 8, true, false, 0.35m),
+            P("Dry-Aged Ribeye 45 Day", "400g 45-day dry-aged ribeye, intense beefy flavour", "PM-BS-005", cat("Beef Steaks"), brand("Heritage Reserve"), 54.99m, 30m, 12, 3, true, true, 0.4m),
 
-            // Electronics - Laptops (5)
-            P("TechPro Laptop Pro 15", "15\" professional laptop, i7, 16GB RAM", "TP-LP-001", cat("Laptops"), brand("TechPro"), 1499.99m, 900m, 30, 5, true, true),
-            P("TechPro Laptop Air 13", "13\" ultralight laptop", "TP-LP-002", cat("Laptops"), brand("TechPro"), 999.99m, 600m, 40, 8, true, false),
-            P("TechPro Laptop Studio", "Creative professional workstation", "TP-LP-003", cat("Laptops"), brand("TechPro"), 2499.99m, 1500m, 15, 3, true, true),
-            P("TechPro Laptop Budget", "Entry-level laptop for students", "TP-LP-004", cat("Laptops"), brand("TechPro"), 499.99m, 280m, 80, 15, true, false),
-            P("TechPro Gaming Laptop", "Gaming laptop with RTX graphics", "TP-LP-005", cat("Laptops"), brand("TechPro"), 1899.99m, 1200m, 20, 5, true, true),
+            // Beef Roasting Joints (4)
+            P("Beef Sirloin Roast", "1.2kg boneless sirloin roast, ideal for Sunday lunch", "PM-BR-001", cat("Beef Roasting Joints"), brand("Primo Cuts"), 42.99m, 24m, 20, 4, true, true, 1.2m),
+            P("Standing Rib Roast", "2kg bone-in rib roast for special occasions", "PM-BR-002", cat("Beef Roasting Joints"), brand("Heritage Reserve"), 89.99m, 50m, 10, 2, true, true, 2.0m),
+            P("Beef Brisket", "1.5kg whole brisket for low and slow cooking", "PM-BR-003", cat("Beef Roasting Joints"), brand("Primo Cuts"), 28.99m, 14m, 25, 5, true, false, 1.5m),
+            P("Beef Fillet Roast", "1kg whole eye fillet, trimmed and tied", "PM-BR-004", cat("Beef Roasting Joints"), brand("Heritage Reserve"), 69.99m, 40m, 12, 3, true, true, 1.0m),
 
-            // Electronics - Accessories (5)
-            P("TechPro Wireless Earbuds", "True wireless earbuds with ANC", "TP-AE-001", cat("Accessories"), brand("TechPro"), 149.99m, 60m, 100, 20, true, false),
-            P("TechPro Smartwatch S1", "Smartwatch with health tracking", "TP-AE-002", cat("Accessories"), brand("TechPro"), 299.99m, 150m, 50, 10, true, true),
-            P("TechPro USB-C Hub", "7-in-1 USB-C hub", "TP-AE-003", cat("Accessories"), brand("TechPro"), 49.99m, 18m, 200, 40, true, false),
-            P("TechPro Wireless Charger", "15W fast wireless charger", "TP-AE-004", cat("Accessories"), brand("TechPro"), 29.99m, 10m, 150, 30, true, false),
-            P("TechPro Laptop Backpack", "Water-resistant tech backpack", "TP-AE-005", cat("Accessories"), brand("TechPro"), 79.99m, 30m, 80, 15, true, false),
+            // Beef Other Cuts (4)
+            P("Premium Beef Mince", "500g lean premium mince, less than 10% fat", "PM-BO-001", cat("Beef Other Cuts"), brand("Primo Cuts"), 12.99m, 6m, 80, 15, true, false, 0.5m),
+            P("Beef Diced Casserole", "500g diced chuck steak for slow cooking", "PM-BO-002", cat("Beef Other Cuts"), brand("Primo Cuts"), 14.99m, 7m, 60, 10, true, false, 0.5m),
+            P("Beef Stir-Fry Strips", "400g thinly sliced rump strips", "PM-BO-003", cat("Beef Other Cuts"), brand("Primo Cuts"), 15.99m, 8m, 50, 10, true, false, 0.4m),
+            P("Osso Buco (Beef Shin)", "1kg cross-cut beef shin on the bone", "PM-BO-004", cat("Beef Other Cuts"), brand("Primo Cuts"), 22.99m, 11m, 25, 5, true, false, 1.0m),
 
-            // Electronics - Tablets (3)
-            P("TechPro Tablet S10", "10.5\" tablet for media and productivity", "TP-TB-001", cat("Tablets"), brand("TechPro"), 599.99m, 350m, 40, 8, true, false),
-            P("TechPro Tablet S10 Pro", "12.9\" pro tablet with stylus", "TP-TB-002", cat("Tablets"), brand("TechPro"), 899.99m, 550m, 25, 5, true, true),
-            P("TechPro Tablet Mini", "8\" compact tablet", "TP-TB-003", cat("Tablets"), brand("TechPro"), 349.99m, 180m, 60, 12, true, false),
+            // Lamb Chops & Cutlets (4)
+            P("Lamb Cutlets (French Trimmed)", "4-pack frenched lamb cutlets", "PM-LC-001", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 28.99m, 15m, 30, 5, true, true, 0.4m),
+            P("Lamb Loin Chops", "4-pack thick-cut loin chops", "PM-LC-002", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 22.99m, 12m, 40, 8, true, false, 0.5m),
+            P("Lamb Rack (8 Point)", "Full 8-point rack, frenched and cap on", "PM-LC-003", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 42.99m, 24m, 15, 3, true, true, 0.6m),
+            P("Marinated Lamb Chops", "6-pack herb and garlic marinated chops", "PM-LC-004", cat("Lamb Chops & Cutlets"), brand("Grill Master"), 24.99m, 13m, 35, 5, true, false, 0.6m),
 
-            // Clothing - Men's (5)
-            P("StyleCo Premium T-Shirt", "100% organic cotton premium t-shirt", "SC-TS-001", cat("Men's Clothing"), brand("StyleCo"), 39.99m, 12m, 200, 30, true, false),
-            P("StyleCo Denim Jacket", "Classic denim jacket with modern fit", "SC-DJ-001", cat("Men's Clothing"), brand("StyleCo"), 89.99m, 30m, 60, 10, true, false),
-            P("StyleCo Slim Fit Chinos", "Stretch chino pants", "SC-CH-001", cat("Men's Clothing"), brand("StyleCo"), 59.99m, 20m, 100, 20, true, false),
-            P("StyleCo Polo Shirt", "Classic polo shirt", "SC-PL-001", cat("Men's Clothing"), brand("StyleCo"), 44.99m, 15m, 150, 25, true, false),
-            P("StyleCo Hoodie", "Premium cotton blend hoodie", "SC-HD-001", cat("Men's Clothing"), brand("StyleCo"), 69.99m, 25m, 80, 15, true, true),
+            // Lamb Roasting Joints (3)
+            P("Lamb Leg (Bone In)", "2kg whole leg of lamb, perfect for roasting", "PM-LR-001", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 48.99m, 26m, 15, 3, true, true, 2.0m),
+            P("Lamb Shoulder (Boneless Rolled)", "1.5kg boneless rolled shoulder", "PM-LR-002", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 36.99m, 20m, 18, 4, true, false, 1.5m),
+            P("Lamb Easy Carve Leg", "1.8kg butterflied and deboned leg", "PM-LR-003", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 52.99m, 28m, 12, 3, true, false, 1.8m),
 
-            // Clothing - Women's (5)
-            P("StyleCo Summer Dress", "Floral print summer dress", "SC-DR-001", cat("Women's Clothing"), brand("StyleCo"), 79.99m, 28m, 70, 12, true, true),
-            P("StyleCo Silk Blouse", "Elegant silk blouse", "SC-BL-001", cat("Women's Clothing"), brand("StyleCo"), 64.99m, 22m, 90, 15, true, false),
-            P("StyleCo Yoga Leggings", "High-waist performance leggings", "SC-YL-001", cat("Women's Clothing"), brand("StyleCo"), 49.99m, 16m, 120, 20, true, false),
-            P("StyleCo Knit Sweater", "Cashmere blend knit sweater", "SC-KS-001", cat("Women's Clothing"), brand("StyleCo"), 99.99m, 40m, 50, 8, true, false),
-            P("StyleCo Trench Coat", "Classic trench coat", "SC-TC-001", cat("Women's Clothing"), brand("StyleCo"), 149.99m, 55m, 35, 5, true, true),
+            // Pork Steaks & Chops (3)
+            P("Pork Loin Chops", "4-pack bone-in loin chops, 2cm thick", "PM-PS-001", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 16.99m, 8m, 50, 10, true, false, 0.6m),
+            P("Pork Scotch Fillet Steak", "2-pack pork scotch fillet steaks", "PM-PS-002", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 14.99m, 7m, 45, 8, true, false, 0.4m),
+            P("Pork Cutlets (Crumbed)", "4-pack hand-crumbed pork cutlets", "PM-PS-003", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 18.99m, 9m, 30, 5, true, false, 0.5m),
 
-            // Sports & Outdoors (5)
-            P("SportMax Running Shoes", "Lightweight running shoes with cushioning", "SM-RS-001", cat("Sports & Outdoors"), brand("SportMax"), 129.99m, 45m, 75, 15, true, true),
-            P("SportMax Yoga Mat", "Non-slip premium yoga mat", "SM-YM-001", cat("Sports & Outdoors"), brand("SportMax"), 49.99m, 15m, 120, 20, true, false),
-            P("SportMax Dumbbell Set", "Adjustable dumbbell set 5-50lbs", "SM-DB-001", cat("Sports & Outdoors"), brand("SportMax"), 249.99m, 120m, 30, 5, true, false),
-            P("SportMax Hiking Backpack", "50L hiking backpack", "SM-HB-001", cat("Sports & Outdoors"), brand("SportMax"), 89.99m, 35m, 60, 10, true, false),
-            P("SportMax Resistance Bands", "Set of 5 resistance bands", "SM-RB-001", cat("Sports & Outdoors"), brand("SportMax"), 24.99m, 8m, 200, 30, true, false),
+            // Pork Roasting Joints (3)
+            P("Pork Belly (Scored)", "1.5kg scored pork belly with crackling", "PM-PR-001", cat("Pork Roasting Joints"), brand("Primo Cuts"), 24.99m, 12m, 20, 4, true, true, 1.5m),
+            P("Pork Rack (4 Cutlet)", "4-cutlet frenched pork rack", "PM-PR-002", cat("Pork Roasting Joints"), brand("Primo Cuts"), 32.99m, 18m, 15, 3, true, false, 0.8m),
+            P("Pork Shoulder (Bone In)", "2.5kg whole pork shoulder for pulling", "PM-PR-003", cat("Pork Roasting Joints"), brand("Primo Cuts"), 29.99m, 14m, 18, 4, true, false, 2.5m),
 
-            // Home & Garden - Furniture (3)
-            P("HomeEssentials Standing Desk", "Electric standing desk 60\"", "HE-SD-001", cat("Furniture"), brand("HomeEssentials"), 499.99m, 250m, 20, 3, true, true),
-            P("HomeEssentials Office Chair", "Ergonomic mesh office chair", "HE-OC-001", cat("Furniture"), brand("HomeEssentials"), 349.99m, 180m, 25, 5, true, false),
-            P("HomeEssentials Bookshelf", "5-tier wooden bookshelf", "HE-BS-001", cat("Furniture"), brand("HomeEssentials"), 129.99m, 60m, 40, 8, true, false),
+            // Chicken Breast & Thigh (4)
+            P("Chicken Breast Fillets", "1kg skinless chicken breast fillets (3-4 pieces)", "PM-CB-001", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 14.99m, 7m, 80, 15, true, false, 1.0m),
+            P("Chicken Thigh Fillets", "1kg boneless skinless thigh fillets", "PM-CB-002", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 12.99m, 6m, 70, 12, true, false, 1.0m),
+            P("Chicken Tenderloins", "500g tender inner breast fillets", "PM-CB-003", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 11.99m, 5m, 60, 10, true, false, 0.5m),
+            P("Chicken Skewers (Marinated)", "8-pack satay marinated chicken skewers", "PM-CB-004", cat("Chicken Breast & Thigh"), brand("Grill Master"), 16.99m, 8m, 40, 8, true, true, 0.6m),
 
-            // Home & Garden - Kitchen (3)
-            P("HomeEssentials Air Fryer", "Digital air fryer 5.8QT", "HE-AF-001", cat("Kitchen"), brand("HomeEssentials"), 79.99m, 35m, 60, 10, true, true),
-            P("HomeEssentials Blender Pro", "High-speed professional blender", "HE-BP-001", cat("Kitchen"), brand("HomeEssentials"), 149.99m, 70m, 40, 8, true, false),
-            P("HomeEssentials Knife Set", "15-piece stainless steel knife set", "HE-KS-001", cat("Kitchen"), brand("HomeEssentials"), 99.99m, 40m, 50, 10, true, false),
+            // Whole Birds (3)
+            P("Whole Free-Range Chicken", "1.8kg whole free-range chicken", "PM-WB-001", cat("Whole Birds"), brand("Valley Fresh"), 16.99m, 8m, 25, 5, true, false, 1.8m),
+            P("Butterflied Chicken", "1.5kg spatchcocked and flattened chicken", "PM-WB-002", cat("Whole Birds"), brand("Valley Fresh"), 18.99m, 9m, 20, 4, true, false, 1.5m),
+            P("Duck (Whole)", "2.2kg whole Pekin duck", "PM-WB-003", cat("Whole Birds"), brand("Valley Fresh"), 32.99m, 18m, 10, 2, true, true, 2.2m),
 
-            // Books & Media (3)
-            P("The Art of Programming", "Comprehensive programming guide", "RM-BK-001", cat("Books & Media"), brand("ReadMore"), 49.99m, 15m, 100, 20, true, false),
-            P("Business Strategy Masterclass", "MBA-level business strategy book", "RM-BK-002", cat("Books & Media"), brand("ReadMore"), 34.99m, 10m, 80, 15, true, false),
-            P("Healthy Living Cookbook", "200+ healthy recipes", "RM-BK-003", cat("Books & Media"), brand("ReadMore"), 29.99m, 8m, 120, 20, true, false),
+            // Veal (3)
+            P("Veal Scallopini", "400g thinly sliced veal leg steaks", "PM-VL-001", cat("Veal"), brand("Primo Cuts"), 26.99m, 14m, 25, 5, true, false, 0.4m),
+            P("Veal Osso Buco", "1kg cross-cut veal shank, 3cm thick", "PM-VL-002", cat("Veal"), brand("Primo Cuts"), 34.99m, 18m, 20, 4, true, true, 1.0m),
+            P("Veal Cutlets", "4-pack bone-in veal rib cutlets", "PM-VL-003", cat("Veal"), brand("Primo Cuts"), 38.99m, 22m, 15, 3, true, false, 0.5m),
 
-            // Health & Beauty (4)
-            P("GlowUp Face Serum", "Vitamin C brightening serum", "GU-FS-001", cat("Health & Beauty"), brand("GlowUp"), 39.99m, 12m, 100, 20, true, true),
-            P("GlowUp Moisturizer", "Daily hydrating moisturizer SPF30", "GU-MO-001", cat("Health & Beauty"), brand("GlowUp"), 29.99m, 9m, 120, 25, true, false),
-            P("NatureFit Protein Powder", "Plant-based protein 2lb", "NF-PP-001", cat("Health & Beauty"), brand("NatureFit"), 44.99m, 18m, 80, 15, true, false),
-            P("NatureFit Multivitamin", "Daily multivitamin 90 capsules", "NF-MV-001", cat("Health & Beauty"), brand("NatureFit"), 19.99m, 6m, 200, 30, true, false),
+            // Sausages & Burgers (5)
+            P("Beef BBQ Sausages", "6-pack classic thick beef sausages", "PM-SB-001", cat("Sausages & Burgers"), brand("Grill Master"), 12.99m, 5m, 80, 15, true, false, 0.6m),
+            P("Pork & Fennel Sausages", "6-pack Italian-style pork and fennel", "PM-SB-002", cat("Sausages & Burgers"), brand("Grill Master"), 14.99m, 6m, 60, 10, true, true, 0.6m),
+            P("Lamb & Rosemary Sausages", "6-pack lamb sausages with rosemary", "PM-SB-003", cat("Sausages & Burgers"), brand("Grill Master"), 15.99m, 7m, 50, 10, true, false, 0.6m),
+            P("Gourmet Beef Burgers", "4-pack 150g premium beef burger patties", "PM-SB-004", cat("Sausages & Burgers"), brand("Grill Master"), 16.99m, 8m, 60, 10, true, true, 0.6m),
+            P("Chorizo Sausages", "4-pack spicy Spanish-style chorizo", "PM-SB-005", cat("Sausages & Burgers"), brand("Grill Master"), 13.99m, 6m, 40, 8, true, false, 0.4m),
 
-            // Toys & Games (4)
-            P("FunZone Building Blocks 500pc", "Creative building block set", "FZ-BB-001", cat("Toys & Games"), brand("FunZone"), 34.99m, 12m, 80, 15, true, false),
-            P("FunZone RC Racing Car", "Remote control racing car 1:16", "FZ-RC-001", cat("Toys & Games"), brand("FunZone"), 49.99m, 20m, 50, 10, true, true),
-            P("FunZone Board Game Collection", "Classic board game bundle", "FZ-BG-001", cat("Toys & Games"), brand("FunZone"), 39.99m, 15m, 60, 10, true, false),
-            P("FunZone Science Kit", "STEM science experiment kit", "FZ-SK-001", cat("Toys & Games"), brand("FunZone"), 29.99m, 10m, 70, 12, true, false),
+            // Deli & Cold Cuts (4)
+            P("Prosciutto (Sliced)", "150g thinly sliced aged prosciutto", "PM-DL-001", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 14.99m, 7m, 40, 8, true, true, 0.15m),
+            P("Salami Milano", "200g traditional Milano-style salami", "PM-DL-002", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 12.99m, 6m, 35, 8, true, false, 0.2m),
+            P("Antipasto Platter", "500g mixed cured meats, olives and pickled vegetables", "PM-DL-003", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 29.99m, 14m, 20, 4, true, true, 0.5m),
+            P("Leg Ham (Sliced)", "200g honey-glazed leg ham slices", "PM-DL-004", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 9.99m, 4m, 50, 10, true, false, 0.2m),
+
+            // Italian Classics (3)
+            P("Beef Lasagne", "1kg family-size beef and bechamel lasagne", "PM-RM-001", cat("Italian Classics"), brand("Artisan Kitchen"), 24.99m, 12m, 20, 4, true, true, 1.0m),
+            P("Lamb Arancini (6 pack)", "6 golden-crumbed risotto balls with lamb ragu", "PM-RM-002", cat("Italian Classics"), brand("Artisan Kitchen"), 18.99m, 8m, 25, 5, true, false, 0.45m),
+            P("Veal Involtini", "4-pack veal rolls stuffed with prosciutto and sage", "PM-RM-003", cat("Italian Classics"), brand("Artisan Kitchen"), 28.99m, 14m, 15, 3, true, true, 0.5m),
+
+            // Curries & Stews (2)
+            P("Slow-Cooked Beef Ragu", "750g rich beef ragu with red wine and herbs", "PM-CS-001", cat("Curries & Stews"), brand("Artisan Kitchen"), 22.99m, 10m, 20, 4, true, false, 0.75m),
+            P("Lamb Massaman Curry", "700g tender lamb in massaman curry sauce", "PM-CS-002", cat("Curries & Stews"), brand("Artisan Kitchen"), 24.99m, 12m, 18, 4, true, false, 0.7m),
+
+            // Pantry (3)
+            P("Bronze-Cut Penne Rigate", "500g Italian dried bronze-cut penne", "PM-PT-001", cat("Pantry"), brand("Rustic Pantry"), 6.99m, 2.5m, 100, 20, true, false, 0.5m),
+            P("Sugo di Pomodoro", "500ml slow-cooked tomato pasta sauce", "PM-PT-002", cat("Pantry"), brand("Rustic Pantry"), 8.99m, 3m, 80, 15, true, false, 0.5m),
+            P("Extra Virgin Olive Oil", "500ml cold-pressed Sicilian olive oil", "PM-PT-003", cat("Pantry"), brand("Rustic Pantry"), 18.99m, 8m, 50, 10, true, true, 0.5m),
+
+            // Marinades & Rubs (3)
+            P("Chimichurri Marinade", "250ml fresh herb and garlic chimichurri", "PM-MR-001", cat("Marinades & Rubs"), brand("Grill Master"), 9.99m, 3m, 60, 10, true, false, 0.25m),
+            P("Smoky BBQ Rub", "150g house-blend smoky barbecue spice rub", "PM-MR-002", cat("Marinades & Rubs"), brand("Grill Master"), 7.99m, 2m, 80, 15, true, true, 0.15m),
+            P("Lemon & Herb Marinade", "250ml zesty lemon and herb marinade for poultry", "PM-MR-003", cat("Marinades & Rubs"), brand("Grill Master"), 8.99m, 3m, 60, 10, true, false, 0.25m),
         };
 
         context.Products.AddRange(products);
         await context.SaveChangesAsync();
 
-        // Add variants for the t-shirt
-        var tshirt = products.First(p => p.SKU == "SC-TS-001");
-        string[] sizes = { "S", "M", "L", "XL" };
-        string[] colors = { "Black", "White", "Navy" };
-        var variants = new List<ProductVariant>();
-        foreach (var sz in sizes)
-            foreach (var cl in colors)
-                variants.Add(new ProductVariant { ProductId = tshirt.Id, VariantName = $"{sz} - {cl}", SKU = $"SC-TS-001-{sz}-{cl[..3].ToUpper()}", Price = 39.99m, StockQuantity = 25, Attributes = $"{{\"size\":\"{sz}\",\"color\":\"{cl}\"}}", CreatedBy = "system" });
-        context.ProductVariants.AddRange(variants);
+        // Add variants for Beef BBQ Sausages (flavour packs)
+        var sausages = products.First(p => p.SKU == "PM-SB-001");
+        var sausageFlavours = new[] { "Original", "Pepper & Onion", "Smoky BBQ" };
+        foreach (var flavour in sausageFlavours)
+            context.ProductVariants.Add(new ProductVariant { ProductId = sausages.Id, VariantName = flavour, SKU = $"PM-SB-001-{flavour[..3].ToUpper()}", Price = 12.99m, StockQuantity = 25, Attributes = $"{{\"flavour\":\"{flavour}\"}}", CreatedBy = "system" });
 
-        // Variants for Running Shoes
-        var shoes = products.First(p => p.SKU == "SM-RS-001");
-        for (int sz = 8; sz <= 12; sz++)
-            context.ProductVariants.Add(new ProductVariant { ProductId = shoes.Id, VariantName = $"Size {sz}", SKU = $"SM-RS-001-{sz}", Price = 129.99m, StockQuantity = 15, Attributes = $"{{\"size\":\"{sz}\"}}", CreatedBy = "system" });
+        // Add variants for Gourmet Beef Burgers (size)
+        var burgers = products.First(p => p.SKU == "PM-SB-004");
+        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "4-pack", SKU = "PM-SB-004-4PK", Price = 16.99m, StockQuantity = 40, Attributes = "{\"size\":\"4-pack\"}", CreatedBy = "system" });
+        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "8-pack", SKU = "PM-SB-004-8PK", Price = 29.99m, StockQuantity = 20, Attributes = "{\"size\":\"8-pack\"}", CreatedBy = "system" });
 
         await context.SaveChangesAsync();
     }
 
-    private static Product P(string name, string desc, string sku, Category cat, Brand brand, decimal price, decimal cost, int stock, int min, bool active, bool featured)
-        => new() { Name = name, Description = desc, SKU = sku, CategoryId = cat.Id, BrandId = brand.Id, BasePrice = price, CostPrice = cost, StockQuantity = stock, MinStockLevel = min, IsActive = active, IsFeatured = featured, CreatedBy = "system" };
+    private static Product P(string name, string desc, string sku, Category cat, Brand brand, decimal price, decimal cost, int stock, int min, bool active, bool featured, decimal weight)
+        => new() { Name = name, Description = desc, SKU = sku, CategoryId = cat.Id, BrandId = brand.Id, BasePrice = price, CostPrice = cost, StockQuantity = stock, MinStockLevel = min, IsActive = active, IsFeatured = featured, Weight = weight, CreatedBy = "system" };
 
     private static async Task SeedDiscountsAsync(AppDbContext context)
     {
@@ -297,11 +316,11 @@ public static class DatabaseSeeder
         var now = DateTime.UtcNow;
         var discounts = new List<Discount>
         {
-            new() { Code = "SUMMER25", Name = "Summer Sale 25%", Description = "25% off everything this summer", DiscountType = DiscountType.Percentage, Value = 25, MinOrderAmount = 50, MaxDiscountAmount = 100, StartDate = now.AddDays(-10), EndDate = now.AddDays(60), IsActive = true, UsageLimit = 500, UsedCount = 12, CreatedBy = "system" },
-            new() { Code = "FLAT10", Name = "Flat $10 Off", Description = "$10 off orders over $30", DiscountType = DiscountType.Fixed, Value = 10, MinOrderAmount = 30, StartDate = now.AddDays(-5), EndDate = now.AddDays(90), IsActive = true, UsageLimit = 1000, UsedCount = 45, CreatedBy = "system" },
-            new() { Code = "WELCOME15", Name = "Welcome 15%", Description = "15% off for new customers", DiscountType = DiscountType.Percentage, Value = 15, StartDate = now, EndDate = now.AddDays(365), IsActive = true, UsageLimit = 10000, UsedCount = 0, CreatedBy = "system" },
-            new() { Code = "VIP50", Name = "VIP 50% Off", Description = "Exclusive 50% off for VIP members", DiscountType = DiscountType.Percentage, Value = 50, MinOrderAmount = 100, MaxDiscountAmount = 200, StartDate = now, EndDate = now.AddDays(30), IsActive = true, UsageLimit = 100, UsedCount = 3, CreatedBy = "system" },
-            new() { Code = "FREESHIP", Name = "Free Shipping", Description = "$9.99 off shipping", DiscountType = DiscountType.Fixed, Value = 9.99m, StartDate = now.AddDays(-30), EndDate = now.AddDays(30), IsActive = true, UsageLimit = 2000, UsedCount = 234, CreatedBy = "system" },
+            new() { Code = "FIRSTORDER", Name = "First Order 15% Off", Description = "15% off your first online order", DiscountType = DiscountType.Percentage, Value = 15, MinOrderAmount = 30, MaxDiscountAmount = 50, StartDate = now, EndDate = now.AddDays(365), IsActive = true, UsageLimit = 10000, UsedCount = 0, CreatedBy = "system" },
+            new() { Code = "BBQ20", Name = "BBQ Season 20%", Description = "20% off all sausages and burgers", DiscountType = DiscountType.Percentage, Value = 20, MinOrderAmount = 25, MaxDiscountAmount = 30, StartDate = now.AddDays(-5), EndDate = now.AddDays(45), IsActive = true, UsageLimit = 500, UsedCount = 38, CreatedBy = "system" },
+            new() { Code = "ROAST10", Name = "Sunday Roast $10 Off", Description = "$10 off any roasting joint over $40", DiscountType = DiscountType.Fixed, Value = 10, MinOrderAmount = 40, StartDate = now.AddDays(-10), EndDate = now.AddDays(60), IsActive = true, UsageLimit = 300, UsedCount = 67, CreatedBy = "system" },
+            new() { Code = "FAMILY25", Name = "Family Pack 25% Off", Description = "25% off orders over $100", DiscountType = DiscountType.Percentage, Value = 25, MinOrderAmount = 100, MaxDiscountAmount = 60, StartDate = now, EndDate = now.AddDays(30), IsActive = true, UsageLimit = 200, UsedCount = 12, CreatedBy = "system" },
+            new() { Code = "FREEDELIVERY", Name = "Free Delivery", Description = "Free delivery on orders over $50", DiscountType = DiscountType.Fixed, Value = 12.99m, MinOrderAmount = 50, StartDate = now.AddDays(-30), EndDate = now.AddDays(60), IsActive = true, UsageLimit = 1000, UsedCount = 189, CreatedBy = "system" },
         };
         context.Discounts.AddRange(discounts);
         await context.SaveChangesAsync();
@@ -313,11 +332,11 @@ public static class DatabaseSeeder
         var now = DateTime.UtcNow;
         var vouchers = new List<Voucher>
         {
-            new() { Code = "GIFT25", Description = "$25 gift card", VoucherType = VoucherType.Gift, ValueType = VoucherValueType.Fixed, Value = 25, StartDate = now.AddDays(-30), ExpiryDate = now.AddDays(180), IsActive = true, MaxRedemptions = 1, CurrentRedemptions = 0, CreatedBy = "system" },
-            new() { Code = "GIFT50", Description = "$50 gift card", VoucherType = VoucherType.Gift, ValueType = VoucherValueType.Fixed, Value = 50, StartDate = now.AddDays(-15), ExpiryDate = now.AddDays(180), IsActive = true, MaxRedemptions = 1, CurrentRedemptions = 0, CreatedBy = "system" },
-            new() { Code = "LOYALTY20", Description = "20% off for loyal customers", VoucherType = VoucherType.Promo, ValueType = VoucherValueType.Percentage, Value = 20, StartDate = now, ExpiryDate = now.AddDays(90), IsActive = true, MaxRedemptions = 100, CurrentRedemptions = 5, CreatedBy = "system" },
-            new() { Code = "BIRTHDAY10", Description = "$10 birthday voucher", VoucherType = VoucherType.Reward, ValueType = VoucherValueType.Fixed, Value = 10, StartDate = now.AddDays(-60), ExpiryDate = now.AddDays(30), IsActive = true, MaxRedemptions = 500, CurrentRedemptions = 42, CreatedBy = "system" },
-            new() { Code = "REFER15", Description = "15% off referral reward", VoucherType = VoucherType.Promo, ValueType = VoucherValueType.Percentage, Value = 15, StartDate = now, ExpiryDate = now.AddDays(365), IsActive = true, MaxRedemptions = 5000, CurrentRedemptions = 0, CreatedBy = "system" },
+            new() { Code = "MEAT25", Description = "$25 gift voucher", VoucherType = VoucherType.Gift, ValueType = VoucherValueType.Fixed, Value = 25, StartDate = now.AddDays(-30), ExpiryDate = now.AddDays(180), IsActive = true, MaxRedemptions = 1, CurrentRedemptions = 0, CreatedBy = "system" },
+            new() { Code = "MEAT50", Description = "$50 gift voucher", VoucherType = VoucherType.Gift, ValueType = VoucherValueType.Fixed, Value = 50, StartDate = now.AddDays(-15), ExpiryDate = now.AddDays(180), IsActive = true, MaxRedemptions = 1, CurrentRedemptions = 0, CreatedBy = "system" },
+            new() { Code = "LOYAL15", Description = "15% off for returning customers", VoucherType = VoucherType.Promo, ValueType = VoucherValueType.Percentage, Value = 15, StartDate = now, ExpiryDate = now.AddDays(90), IsActive = true, MaxRedemptions = 100, CurrentRedemptions = 8, CreatedBy = "system" },
+            new() { Code = "WELCOME10", Description = "$10 welcome voucher for new members", VoucherType = VoucherType.Reward, ValueType = VoucherValueType.Fixed, Value = 10, StartDate = now.AddDays(-60), ExpiryDate = now.AddDays(60), IsActive = true, MaxRedemptions = 500, CurrentRedemptions = 55, CreatedBy = "system" },
+            new() { Code = "REFER20", Description = "20% off referral reward", VoucherType = VoucherType.Promo, ValueType = VoucherValueType.Percentage, Value = 20, StartDate = now, ExpiryDate = now.AddDays(365), IsActive = true, MaxRedemptions = 5000, CurrentRedemptions = 0, CreatedBy = "system" },
         };
         context.Vouchers.AddRange(vouchers);
         await context.SaveChangesAsync();
@@ -331,20 +350,24 @@ public static class DatabaseSeeder
 
         var offers = new List<SpecialOffer>
         {
-            new() { Name = "Tech Flash Sale", Description = "Up to 30% off selected electronics", OfferType = OfferType.Flash, StartDate = now.AddDays(-2), EndDate = now.AddDays(5), IsActive = true, CreatedBy = "system" },
-            new() { Name = "Buy More Save More", Description = "20% off when you buy 3+ items", OfferType = OfferType.Bundle, StartDate = now, EndDate = now.AddDays(30), IsActive = true, CreatedBy = "system" },
-            new() { Name = "Weekend Special", Description = "15% off all clothing this weekend", OfferType = OfferType.Seasonal, StartDate = now, EndDate = now.AddDays(3), IsActive = true, CreatedBy = "system" },
+            new() { Name = "Weekend BBQ Pack", Description = "Save on sausages, burgers and marinades this weekend", OfferType = OfferType.Bundle, StartDate = now, EndDate = now.AddDays(3), IsActive = true, CreatedBy = "system" },
+            new() { Name = "Steak Night Special", Description = "Premium steaks at flash sale prices", OfferType = OfferType.Flash, StartDate = now.AddDays(-1), EndDate = now.AddDays(7), IsActive = true, CreatedBy = "system" },
+            new() { Name = "Winter Roast Season", Description = "15% off all roasting joints for winter", OfferType = OfferType.Seasonal, StartDate = now, EndDate = now.AddDays(60), IsActive = true, CreatedBy = "system" },
         };
         context.SpecialOffers.AddRange(offers);
         await context.SaveChangesAsync();
 
         // Link products to offers
-        var techProducts = products.Where(p => p.SKU.StartsWith("TP-")).Take(5).ToList();
-        foreach (var p in techProducts)
+        var bbqProducts = products.Where(p => p.SKU.StartsWith("PM-SB") || p.SKU.StartsWith("PM-MR")).ToList();
+        foreach (var p in bbqProducts)
             context.SpecialOfferProducts.Add(new SpecialOfferProduct { SpecialOfferId = offers[0].Id, ProductId = p.Id, CreatedBy = "system" });
 
-        var clothingProducts = products.Where(p => p.SKU.StartsWith("SC-")).Take(5).ToList();
-        foreach (var p in clothingProducts)
+        var steakProducts = products.Where(p => p.SKU.StartsWith("PM-BS")).ToList();
+        foreach (var p in steakProducts)
+            context.SpecialOfferProducts.Add(new SpecialOfferProduct { SpecialOfferId = offers[1].Id, ProductId = p.Id, CreatedBy = "system" });
+
+        var roastProducts = products.Where(p => p.SKU.StartsWith("PM-BR") || p.SKU.StartsWith("PM-LR") || p.SKU.StartsWith("PM-PR")).ToList();
+        foreach (var p in roastProducts)
             context.SpecialOfferProducts.Add(new SpecialOfferProduct { SpecialOfferId = offers[2].Id, ProductId = p.Id, CreatedBy = "system" });
 
         await context.SaveChangesAsync();
@@ -444,16 +467,16 @@ public static class DatabaseSeeder
         var reviews = new List<ProductReview>();
         var comments = new[]
         {
-            ("Excellent quality!", "Exceeded my expectations. Great value for the price."),
-            ("Good product", "Solid build quality. Would recommend."),
-            ("Amazing!", "Best purchase I've made this year. Absolutely love it."),
-            ("Pretty decent", "Does what it's supposed to. Nothing fancy but works well."),
-            ("Worth every penny", "Premium feel and great performance."),
-            ("Not bad", "Average product. Could be better at this price point."),
-            ("Love it!", "My whole family enjoys this product. Will buy again."),
-            ("Great for the price", "Budget-friendly and good quality."),
-            ("Impressive", "Sleek design and fantastic features."),
-            ("Solid choice", "Reliable and well-made. Happy with my purchase."),
+            ("Absolutely tender!", "The scotch fillet was perfectly marbled. Best steak I've had at home."),
+            ("Family favourite", "Our kids love the sausages. We order every week now."),
+            ("Restaurant quality", "The dry-aged ribeye was incredible. Worth every cent."),
+            ("Great for meal prep", "Chicken breast fillets are always fresh and well-trimmed."),
+            ("Sunday roast sorted", "The lamb leg was perfect. Fell off the bone after slow roasting."),
+            ("Delicious deli meats", "The prosciutto is thinly sliced and has great flavour."),
+            ("Easy weeknight dinner", "The beef lasagne is generous and tastes homemade."),
+            ("Best burgers ever", "These gourmet patties are juicy and hold together perfectly on the grill."),
+            ("Premium quality", "You can really taste the difference with free-range chicken."),
+            ("Pantry staple", "The olive oil is top quality. Use it on everything now."),
         };
 
         var rng = new Random(123);
@@ -483,12 +506,12 @@ public static class DatabaseSeeder
         if (await context.AppSettings.AnyAsync()) return;
         var settings = new List<AppSetting>
         {
-            new() { Key = "Store.Name", Value = "Appilico Store", Group = "General", Description = "Store display name", CreatedBy = "system" },
-            new() { Key = "Store.Currency", Value = "USD", Group = "General", Description = "Default currency", CreatedBy = "system" },
-            new() { Key = "Store.TaxRate", Value = "10", Group = "General", Description = "Tax rate percentage", CreatedBy = "system" },
-            new() { Key = "Store.ShippingFee", Value = "9.99", Group = "Shipping", Description = "Default shipping fee", CreatedBy = "system" },
-            new() { Key = "Store.FreeShippingThreshold", Value = "100", Group = "Shipping", Description = "Free shipping threshold amount", CreatedBy = "system" },
-            new() { Key = "Loyalty.PointsPerDollar", Value = "1", Group = "Loyalty", Description = "Loyalty points earned per dollar spent", CreatedBy = "system" },
+            new() { Key = "Store.Name", Value = "Primo Meats", Group = "General", Description = "Store display name", CreatedBy = "system" },
+            new() { Key = "Store.Currency", Value = "AUD", Group = "General", Description = "Default currency", CreatedBy = "system" },
+            new() { Key = "Store.TaxRate", Value = "10", Group = "General", Description = "GST rate percentage", CreatedBy = "system" },
+            new() { Key = "Store.DeliveryFee", Value = "12.99", Group = "Delivery", Description = "Default delivery fee", CreatedBy = "system" },
+            new() { Key = "Store.FreeDeliveryThreshold", Value = "80", Group = "Delivery", Description = "Free delivery threshold amount", CreatedBy = "system" },
+            new() { Key = "Loyalty.PointsPerDollar", Value = "2", Group = "Loyalty", Description = "Loyalty points earned per dollar spent", CreatedBy = "system" },
             new() { Key = "Loyalty.PointsRedemptionRate", Value = "100", Group = "Loyalty", Description = "Points needed for $1 discount", CreatedBy = "system" },
         };
         context.AppSettings.AddRange(settings);
