@@ -213,7 +213,7 @@ public class LiveApiTests
         var root = await Root(resp);
         root.GetProperty("success").GetBoolean().Should().BeTrue();
         root.GetProperty("data").GetArrayLength().Should().BeGreaterThan(0);
-        root.GetProperty("pagination").GetProperty("totalCount").GetInt32().Should().Be(56);
+        root.GetProperty("pagination").GetProperty("totalCount").GetInt32().Should().Be(74);
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public class LiveApiTests
     [Fact]
     public async Task Products_AllHaveImages()
     {
-        var resp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var resp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         var data = await Data(resp);
         foreach (var product in data.EnumerateArray())
         {
@@ -333,7 +333,7 @@ public class LiveApiTests
     [Fact]
     public async Task Products_AllSKUsStartWithPM()
     {
-        var resp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var resp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         var data = await Data(resp);
         foreach (var p in data.EnumerateArray())
             p.GetProperty("sku").GetString().Should().StartWith("PM-");
@@ -344,12 +344,12 @@ public class LiveApiTests
     // ═══════════════════════════════════════════════════
 
     [Fact]
-    public async Task Categories_GetAll_Returns21Categories()
+    public async Task Categories_GetAll_Returns25Categories()
     {
         var resp = await _client.GetAsync("/api/categories");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var data = await Data(resp);
-        data.GetArrayLength().Should().Be(21);
+        data.GetArrayLength().Should().Be(25);
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public class LiveApiTests
         var resp = await _client.GetAsync("/api/categories/tree");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var data = await Data(resp);
-        data.GetArrayLength().Should().Be(10, "Should have 10 top-level categories");
+        data.GetArrayLength().Should().Be(8, "Should have 8 top-level categories");
     }
 
     [Fact]
@@ -753,7 +753,7 @@ public class LiveApiTests
     [Fact]
     public async Task Reviews_GetByProduct_ReturnsReviews()
     {
-        var prodResp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var prodResp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         var products = await Data(prodResp);
         string? pid = null;
         foreach (var p in products.EnumerateArray())
@@ -782,7 +782,7 @@ public class LiveApiTests
     [Fact]
     public async Task Reviews_SeedReviews_AreApproved()
     {
-        var prodResp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var prodResp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         var products = await Data(prodResp);
         string? pid = null;
         foreach (var p in products.EnumerateArray())
@@ -1029,7 +1029,7 @@ public class LiveApiTests
     [Fact]
     public async Task DataIntegrity_AllProductsHaveCategoryAndBrand()
     {
-        var resp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var resp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         foreach (var p in (await Data(resp)).EnumerateArray())
         {
             p.GetProperty("categoryName").GetString().Should().NotBeNullOrEmpty();
@@ -1040,7 +1040,7 @@ public class LiveApiTests
     [Fact]
     public async Task DataIntegrity_AllProductsHaveValidPricing()
     {
-        var resp = await _client.GetAsync("/api/products?page=1&pageSize=56");
+        var resp = await _client.GetAsync("/api/products?page=1&pageSize=74");
         foreach (var p in (await Data(resp)).EnumerateArray())
         {
             p.GetProperty("basePrice").GetDecimal().Should().BeGreaterThan(0);
@@ -1049,11 +1049,11 @@ public class LiveApiTests
     }
 
     [Fact]
-    public async Task DataIntegrity_ProductCount_Is56()
+    public async Task DataIntegrity_ProductCount_Is74()
     {
         var resp = await _client.GetAsync("/api/products?page=1&pageSize=1");
         var root = await Root(resp);
-        root.GetProperty("pagination").GetProperty("totalCount").GetInt32().Should().Be(56);
+        root.GetProperty("pagination").GetProperty("totalCount").GetInt32().Should().Be(74);
     }
 
     // ═══════════════════════════════════════════════════

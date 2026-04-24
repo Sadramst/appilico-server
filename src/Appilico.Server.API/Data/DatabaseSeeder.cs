@@ -137,16 +137,14 @@ public static class DatabaseSeeder
 
         var topLevel = new List<Category>
         {
-            new() { Name = "Beef", Description = "Premium grain-fed and grass-fed beef cuts", ImageUrl = "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800", SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Lamb", Description = "Tender spring lamb sourced from local farms", ImageUrl = "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800", SortOrder = 2, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Pork", Description = "Free-range pork from trusted producers", ImageUrl = "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800", SortOrder = 3, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Poultry", Description = "Free-range chicken, duck and turkey", ImageUrl = "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800", SortOrder = 4, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Veal", Description = "Ethically raised premium veal", SortOrder = 5, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Sausages & Burgers", Description = "Handmade sausages and gourmet burger patties", ImageUrl = "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800", SortOrder = 6, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Deli & Cold Cuts", Description = "Cured meats, salumi, and antipasto platters", ImageUrl = "https://images.unsplash.com/photo-1544025162-d76694265947?w=800", SortOrder = 7, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Ready Meals", Description = "Chef-prepared meals ready to heat and serve", SortOrder = 8, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Pantry", Description = "Artisan pasta, sauces, oils and condiments", SortOrder = 9, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Marinades & Rubs", Description = "House-made marinades, rubs and seasonings", SortOrder = 10, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Beef", Description = "Premium grain-fed and grass-fed beef – steaks, roasts and more", ImageUrl = "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800", SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Veal", Description = "Ethically raised premium veal cuts", ImageUrl = "https://images.unsplash.com/photo-1607116667981-68bd72c3a0ef?w=800", SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Lamb", Description = "Tender spring lamb sourced from local Australian farms", ImageUrl = "https://images.unsplash.com/photo-1514516345957-556ca7d90a29?w=800", SortOrder = 3, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork", Description = "Free-range pork from trusted producers", ImageUrl = "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800", SortOrder = 4, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Poultry", Description = "Free-range chicken, duck and turkey", ImageUrl = "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800", SortOrder = 5, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Deli & Cold Cuts", Description = "Cured meats, salumi, antipasto and cold cut platters", ImageUrl = "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800", SortOrder = 6, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Ready Meals", Description = "Chef-prepared meals ready to heat and serve", ImageUrl = "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800", SortOrder = 7, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pantry", Description = "Artisan pasta, sauces, oils, condiments and seasonings", ImageUrl = "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=800", SortOrder = 8, IsActive = true, CreatedBy = "system" },
         };
         context.Categories.AddRange(topLevel);
         await context.SaveChangesAsync();
@@ -157,18 +155,26 @@ public static class DatabaseSeeder
             new() { Name = "Beef Steaks", Description = "Premium steak cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
             new() { Name = "Beef Roasting Joints", Description = "Slow roast and Sunday roast cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
             new() { Name = "Beef Other Cuts", Description = "Mince, diced, strips and specialty cuts", ParentCategoryId = topLevel[0].Id, SortOrder = 3, IsActive = true, CreatedBy = "system" },
+            // Veal subs
+            new() { Name = "Veal Steaks & Cutlets", Description = "Scallopini, cutlets and rib eye", ParentCategoryId = topLevel[1].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Veal Specialty", Description = "Osso buco, involtini and rolled roasts", ParentCategoryId = topLevel[1].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
             // Lamb subs
-            new() { Name = "Lamb Chops & Cutlets", Description = "Chops, cutlets and racks", ParentCategoryId = topLevel[1].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Lamb Roasting Joints", Description = "Leg, shoulder and rolled roasts", ParentCategoryId = topLevel[1].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Lamb Chops & Cutlets", Description = "Chops, cutlets and racks", ParentCategoryId = topLevel[2].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Lamb Roasting Joints", Description = "Leg, shoulder and rolled roasts", ParentCategoryId = topLevel[2].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
             // Pork subs
-            new() { Name = "Pork Steaks & Chops", Description = "Loin chops, steaks and cutlets", ParentCategoryId = topLevel[2].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Pork Roasting Joints", Description = "Rolled pork, rack and belly roasts", ParentCategoryId = topLevel[2].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork Steaks & Chops", Description = "Loin chops, steaks and cutlets", ParentCategoryId = topLevel[3].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork Roasting Joints", Description = "Rolled pork, rack and belly roasts", ParentCategoryId = topLevel[3].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Pork Other Cuts", Description = "Ribs, belly strips and shoulder", ParentCategoryId = topLevel[3].Id, SortOrder = 3, IsActive = true, CreatedBy = "system" },
             // Poultry subs
-            new() { Name = "Chicken Breast & Thigh", Description = "Skinless breast, thigh fillets and tenderloins", ParentCategoryId = topLevel[3].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Whole Birds", Description = "Whole chicken, spatchcock and duck", ParentCategoryId = topLevel[3].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Chicken Portions", Description = "Breast, thigh, drumstick and wings", ParentCategoryId = topLevel[4].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Whole Birds", Description = "Whole chicken, spatchcock and duck", ParentCategoryId = topLevel[4].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
             // Ready Meals subs
-            new() { Name = "Italian Classics", Description = "Lasagne, arancini, involtini and more", ParentCategoryId = topLevel[7].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
-            new() { Name = "Curries & Stews", Description = "Slow-cooked curries and hearty stews", ParentCategoryId = topLevel[7].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Italian Classics", Description = "Lasagne, arancini, involtini and more", ParentCategoryId = topLevel[6].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Sausages & Burgers", Description = "Handmade sausages and gourmet burger patties", ParentCategoryId = topLevel[6].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Curries & Stews", Description = "Slow-cooked curries, stews and braised sauces", ParentCategoryId = topLevel[6].Id, SortOrder = 3, IsActive = true, CreatedBy = "system" },
+            // Pantry subs
+            new() { Name = "Pasta & Sauces", Description = "Dried pasta, fresh sauces and condiments", ParentCategoryId = topLevel[7].Id, SortOrder = 1, IsActive = true, CreatedBy = "system" },
+            new() { Name = "Oils & Seasonings", Description = "Olive oils, marinades, rubs and spice blends", ParentCategoryId = topLevel[7].Id, SortOrder = 2, IsActive = true, CreatedBy = "system" },
         };
         context.Categories.AddRange(subCats);
         await context.SaveChangesAsync();
@@ -202,93 +208,115 @@ public static class DatabaseSeeder
 
         var products = new List<Product>
         {
-            // Beef Steaks (5)
-            P("Scotch Fillet Steak", "300g premium grain-fed scotch fillet, beautifully marbled", "PM-BS-001", cat("Beef Steaks"), brand("Primo Cuts"), 32.99m, 18m, 40, 5, true, true, 0.3m),
-            P("Eye Fillet Steak", "250g centre-cut eye fillet, the tenderest steak cut", "PM-BS-002", cat("Beef Steaks"), brand("Primo Cuts"), 38.99m, 22m, 30, 5, true, true, 0.25m),
-            P("T-Bone Steak", "450g bone-in T-bone with fillet and sirloin", "PM-BS-003", cat("Beef Steaks"), brand("Primo Cuts"), 29.99m, 16m, 35, 5, true, false, 0.45m),
-            P("Porterhouse Steak", "350g thick-cut porterhouse, perfect for grilling", "PM-BS-004", cat("Beef Steaks"), brand("Primo Cuts"), 27.99m, 14m, 45, 8, true, false, 0.35m),
-            P("Dry-Aged Ribeye 45 Day", "400g 45-day dry-aged ribeye, intense beefy flavour", "PM-BS-005", cat("Beef Steaks"), brand("Heritage Reserve"), 54.99m, 30m, 12, 3, true, true, 0.4m),
+            // ── Beef Steaks (7) ──────────────────────────────────
+            P("Scotch Fillet Steak", "300g premium grain-fed scotch fillet, beautifully marbled for maximum flavour", "PM-BS-001", cat("Beef Steaks"), brand("Primo Cuts"), 32.99m, 18m, 40, 5, true, true, 0.3m),
+            P("Eye Fillet Steak", "250g centre-cut eye fillet, the tenderest steak cut available", "PM-BS-002", cat("Beef Steaks"), brand("Primo Cuts"), 38.99m, 22m, 30, 5, true, true, 0.25m),
+            P("T-Bone Steak", "450g bone-in T-bone combining fillet and sirloin", "PM-BS-003", cat("Beef Steaks"), brand("Primo Cuts"), 29.99m, 16m, 35, 5, true, false, 0.45m),
+            P("Porterhouse Steak", "350g thick-cut porterhouse, ideal for the BBQ", "PM-BS-004", cat("Beef Steaks"), brand("Primo Cuts"), 27.99m, 14m, 45, 8, true, false, 0.35m),
+            P("Beef Tomahawk", "800g dry-aged tomahawk with full rib bone, showstopper cut", "PM-BS-005", cat("Beef Steaks"), brand("Heritage Reserve"), 49.50m, 28m, 15, 3, true, true, 0.8m),
+            P("Dry-Aged Ribeye 45 Day", "400g 45-day dry-aged ribeye, intense beefy flavour", "PM-BS-006", cat("Beef Steaks"), brand("Heritage Reserve"), 54.99m, 30m, 12, 3, true, true, 0.4m),
+            P("Beef Rump Steak", "300g lean rump steak, great value everyday cut", "PM-BS-007", cat("Beef Steaks"), brand("Primo Cuts"), 19.99m, 10m, 60, 10, true, false, 0.3m),
 
-            // Beef Roasting Joints (4)
-            P("Beef Sirloin Roast", "1.2kg boneless sirloin roast, ideal for Sunday lunch", "PM-BR-001", cat("Beef Roasting Joints"), brand("Primo Cuts"), 42.99m, 24m, 20, 4, true, true, 1.2m),
-            P("Standing Rib Roast", "2kg bone-in rib roast for special occasions", "PM-BR-002", cat("Beef Roasting Joints"), brand("Heritage Reserve"), 89.99m, 50m, 10, 2, true, true, 2.0m),
-            P("Beef Brisket", "1.5kg whole brisket for low and slow cooking", "PM-BR-003", cat("Beef Roasting Joints"), brand("Primo Cuts"), 28.99m, 14m, 25, 5, true, false, 1.5m),
+            // ── Beef Roasting Joints (5) ─────────────────────────
+            P("Beef Sirloin Roast", "1.2kg boneless sirloin roast, perfect for Sunday lunch", "PM-BR-001", cat("Beef Roasting Joints"), brand("Primo Cuts"), 80.00m, 45m, 20, 4, true, true, 1.2m),
+            P("Beef Rib Eye Roast", "1.5kg bone-in rib eye roast for special occasions", "PM-BR-002", cat("Beef Roasting Joints"), brand("Heritage Reserve"), 69.50m, 38m, 10, 2, true, true, 1.5m),
+            P("Beef Brisket", "1.5kg whole brisket for low and slow smoking or braising", "PM-BR-003", cat("Beef Roasting Joints"), brand("Primo Cuts"), 28.99m, 14m, 25, 5, true, false, 1.5m),
             P("Beef Fillet Roast", "1kg whole eye fillet, trimmed and tied", "PM-BR-004", cat("Beef Roasting Joints"), brand("Heritage Reserve"), 69.99m, 40m, 12, 3, true, true, 1.0m),
+            P("Beef Asado Ribs", "1.2kg short ribs cut Argentinian style for BBQ", "PM-BR-005", cat("Beef Roasting Joints"), brand("Grill Master"), 35.00m, 18m, 20, 4, true, false, 1.2m),
 
-            // Beef Other Cuts (4)
-            P("Premium Beef Mince", "500g lean premium mince, less than 10% fat", "PM-BO-001", cat("Beef Other Cuts"), brand("Primo Cuts"), 12.99m, 6m, 80, 15, true, false, 0.5m),
-            P("Beef Diced Casserole", "500g diced chuck steak for slow cooking", "PM-BO-002", cat("Beef Other Cuts"), brand("Primo Cuts"), 14.99m, 7m, 60, 10, true, false, 0.5m),
-            P("Beef Stir-Fry Strips", "400g thinly sliced rump strips", "PM-BO-003", cat("Beef Other Cuts"), brand("Primo Cuts"), 15.99m, 8m, 50, 10, true, false, 0.4m),
-            P("Osso Buco (Beef Shin)", "1kg cross-cut beef shin on the bone", "PM-BO-004", cat("Beef Other Cuts"), brand("Primo Cuts"), 22.99m, 11m, 25, 5, true, false, 1.0m),
+            // ── Beef Other Cuts (4) ──────────────────────────────
+            P("Premium Beef Mince", "500g lean premium mince, less than 10% fat", "PM-BO-001", cat("Beef Other Cuts"), brand("Primo Cuts"), 14.00m, 6m, 80, 15, true, false, 0.5m),
+            P("Beef Diced Casserole", "500g diced chuck steak for slow cooking", "PM-BO-002", cat("Beef Other Cuts"), brand("Primo Cuts"), 16.00m, 7m, 60, 10, true, false, 0.5m),
+            P("Beef Stir-Fry Strips", "400g thinly sliced rump strips", "PM-BO-003", cat("Beef Other Cuts"), brand("Primo Cuts"), 17.00m, 8m, 50, 10, true, false, 0.4m),
+            P("Osso Buco (Beef Shin)", "1kg cross-cut beef shin on the bone", "PM-BO-004", cat("Beef Other Cuts"), brand("Primo Cuts"), 22.00m, 11m, 25, 5, true, false, 1.0m),
 
-            // Lamb Chops & Cutlets (4)
-            P("Lamb Cutlets (French Trimmed)", "4-pack frenched lamb cutlets", "PM-LC-001", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 28.99m, 15m, 30, 5, true, true, 0.4m),
-            P("Lamb Loin Chops", "4-pack thick-cut loin chops", "PM-LC-002", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 22.99m, 12m, 40, 8, true, false, 0.5m),
-            P("Lamb Rack (8 Point)", "Full 8-point rack, frenched and cap on", "PM-LC-003", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 42.99m, 24m, 15, 3, true, true, 0.6m),
-            P("Marinated Lamb Chops", "6-pack herb and garlic marinated chops", "PM-LC-004", cat("Lamb Chops & Cutlets"), brand("Grill Master"), 24.99m, 13m, 35, 5, true, false, 0.6m),
+            // ── Veal Steaks & Cutlets (3) ────────────────────────
+            P("Veal Scallopini", "400g thinly sliced veal leg, pan-ready", "PM-VS-001", cat("Veal Steaks & Cutlets"), brand("Primo Cuts"), 22.00m, 12m, 25, 5, true, false, 0.4m),
+            P("Veal Rib Eye", "350g veal rib eye steak, tender and mild", "PM-VS-002", cat("Veal Steaks & Cutlets"), brand("Primo Cuts"), 20.00m, 11m, 20, 4, true, true, 0.35m),
+            P("Veal Chops (Crumbed)", "4-pack hand-crumbed veal chops", "PM-VS-003", cat("Veal Steaks & Cutlets"), brand("Primo Cuts"), 14.00m, 7m, 30, 5, true, false, 0.5m),
 
-            // Lamb Roasting Joints (3)
-            P("Lamb Leg (Bone In)", "2kg whole leg of lamb, perfect for roasting", "PM-LR-001", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 48.99m, 26m, 15, 3, true, true, 2.0m),
-            P("Lamb Shoulder (Boneless Rolled)", "1.5kg boneless rolled shoulder", "PM-LR-002", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 36.99m, 20m, 18, 4, true, false, 1.5m),
-            P("Lamb Easy Carve Leg", "1.8kg butterflied and deboned leg", "PM-LR-003", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 52.99m, 28m, 12, 3, true, false, 1.8m),
+            // ── Veal Specialty (3) ───────────────────────────────
+            P("Veal Osso Buco", "1kg cross-cut veal shank, 3cm thick", "PM-VX-001", cat("Veal Specialty"), brand("Primo Cuts"), 34.99m, 18m, 20, 4, true, true, 1.0m),
+            P("Veal Involtini", "4-pack veal rolls stuffed with prosciutto and sage", "PM-VX-002", cat("Veal Specialty"), brand("Artisan Kitchen"), 8.00m, 4m, 30, 5, true, true, 0.5m),
+            P("Veal Cutlets (Bone-In)", "4-pack bone-in veal rib cutlets", "PM-VX-003", cat("Veal Specialty"), brand("Primo Cuts"), 38.99m, 22m, 15, 3, true, false, 0.5m),
 
-            // Pork Steaks & Chops (3)
+            // ── Lamb Chops & Cutlets (5) ─────────────────────────
+            P("Lamb Rack", "Full 8-point rack, frenched and cap on", "PM-LC-001", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 40.00m, 22m, 15, 3, true, true, 0.6m),
+            P("Lamb Chops (Marinated)", "6-pack herb and garlic marinated chops", "PM-LC-002", cat("Lamb Chops & Cutlets"), brand("Grill Master"), 17.50m, 9m, 35, 5, true, false, 0.6m),
+            P("Lamb Cutlets (French Trimmed)", "4-pack frenched lamb cutlets", "PM-LC-003", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 28.99m, 15m, 30, 5, true, true, 0.4m),
+            P("Lamb Loin Chops", "4-pack thick-cut loin chops", "PM-LC-004", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 22.99m, 12m, 40, 8, true, false, 0.5m),
+            P("Lamb Backstrap", "400g trimmed lamb backstrap fillet", "PM-LC-005", cat("Lamb Chops & Cutlets"), brand("Valley Fresh"), 32.00m, 17m, 20, 4, true, false, 0.4m),
+
+            // ── Lamb Roasting Joints (4) ─────────────────────────
+            P("Lamb Leg (Easy Carve)", "2kg butterflied and deboned leg for easy carving", "PM-LR-001", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 85.00m, 46m, 12, 3, true, true, 2.0m),
+            P("Lamb Leg (Bone In)", "2kg whole leg of lamb for traditional roasting", "PM-LR-002", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 48.99m, 26m, 15, 3, true, false, 2.0m),
+            P("Lamb Shoulder (Boneless Rolled)", "1.5kg boneless rolled shoulder, slow-roast favourite", "PM-LR-003", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 55.00m, 28m, 18, 4, true, true, 1.5m),
+            P("Lamb Shanks", "1kg lamb shanks (2 pieces), perfect for braising", "PM-LR-004", cat("Lamb Roasting Joints"), brand("Valley Fresh"), 18.00m, 9m, 30, 5, true, false, 1.0m),
+
+            // ── Pork Steaks & Chops (3) ──────────────────────────
             P("Pork Loin Chops", "4-pack bone-in loin chops, 2cm thick", "PM-PS-001", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 16.99m, 8m, 50, 10, true, false, 0.6m),
             P("Pork Scotch Fillet Steak", "2-pack pork scotch fillet steaks", "PM-PS-002", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 14.99m, 7m, 45, 8, true, false, 0.4m),
             P("Pork Cutlets (Crumbed)", "4-pack hand-crumbed pork cutlets", "PM-PS-003", cat("Pork Steaks & Chops"), brand("Primo Cuts"), 18.99m, 9m, 30, 5, true, false, 0.5m),
 
-            // Pork Roasting Joints (3)
-            P("Pork Belly (Scored)", "1.5kg scored pork belly with crackling", "PM-PR-001", cat("Pork Roasting Joints"), brand("Primo Cuts"), 24.99m, 12m, 20, 4, true, true, 1.5m),
-            P("Pork Rack (4 Cutlet)", "4-cutlet frenched pork rack", "PM-PR-002", cat("Pork Roasting Joints"), brand("Primo Cuts"), 32.99m, 18m, 15, 3, true, false, 0.8m),
-            P("Pork Shoulder (Bone In)", "2.5kg whole pork shoulder for pulling", "PM-PR-003", cat("Pork Roasting Joints"), brand("Primo Cuts"), 29.99m, 14m, 18, 4, true, false, 2.5m),
+            // ── Pork Roasting Joints (3) ─────────────────────────
+            P("Porchetta", "1.8kg Italian-style rolled pork belly with herbs", "PM-PR-001", cat("Pork Roasting Joints"), brand("Artisan Kitchen"), 50.00m, 26m, 15, 3, true, true, 1.8m),
+            P("Pork Rack (Trimmed)", "1kg 4-cutlet frenched pork rack", "PM-PR-002", cat("Pork Roasting Joints"), brand("Primo Cuts"), 32.99m, 18m, 15, 3, true, false, 1.0m),
+            P("Pork Shoulder (Bone In)", "2.5kg whole pork shoulder for pulled pork", "PM-PR-003", cat("Pork Roasting Joints"), brand("Primo Cuts"), 45.00m, 22m, 18, 4, true, true, 2.5m),
 
-            // Chicken Breast & Thigh (4)
-            P("Chicken Breast Fillets", "1kg skinless chicken breast fillets (3-4 pieces)", "PM-CB-001", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 14.99m, 7m, 80, 15, true, false, 1.0m),
-            P("Chicken Thigh Fillets", "1kg boneless skinless thigh fillets", "PM-CB-002", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 12.99m, 6m, 70, 12, true, false, 1.0m),
-            P("Chicken Tenderloins", "500g tender inner breast fillets", "PM-CB-003", cat("Chicken Breast & Thigh"), brand("Valley Fresh"), 11.99m, 5m, 60, 10, true, false, 0.5m),
-            P("Chicken Skewers (Marinated)", "8-pack satay marinated chicken skewers", "PM-CB-004", cat("Chicken Breast & Thigh"), brand("Grill Master"), 16.99m, 8m, 40, 8, true, true, 0.6m),
+            // ── Pork Other Cuts (3) ──────────────────────────────
+            P("Pork Belly (Scored)", "1.5kg scored pork belly for perfect crackling", "PM-PO-001", cat("Pork Other Cuts"), brand("Primo Cuts"), 24.99m, 12m, 20, 4, true, true, 1.5m),
+            P("Pork Belly Strips", "500g sliced pork belly strips for grilling or stir-fry", "PM-PO-002", cat("Pork Other Cuts"), brand("Primo Cuts"), 15.00m, 7m, 35, 5, true, false, 0.5m),
+            P("Pork Leg (Boneless)", "2kg boneless pork leg roast", "PM-PO-003", cat("Pork Other Cuts"), brand("Primo Cuts"), 45.00m, 24m, 15, 3, true, false, 2.0m),
 
-            // Whole Birds (3)
-            P("Whole Free-Range Chicken", "1.8kg whole free-range chicken", "PM-WB-001", cat("Whole Birds"), brand("Valley Fresh"), 16.99m, 8m, 25, 5, true, false, 1.8m),
-            P("Butterflied Chicken", "1.5kg spatchcocked and flattened chicken", "PM-WB-002", cat("Whole Birds"), brand("Valley Fresh"), 18.99m, 9m, 20, 4, true, false, 1.5m),
-            P("Duck (Whole)", "2.2kg whole Pekin duck", "PM-WB-003", cat("Whole Birds"), brand("Valley Fresh"), 32.99m, 18m, 10, 2, true, true, 2.2m),
+            // ── Chicken Portions (5) ─────────────────────────────
+            P("Chicken Breast Fillets", "1kg skinless chicken breast fillets (3-4 pieces)", "PM-CP-001", cat("Chicken Portions"), brand("Valley Fresh"), 14.99m, 7m, 80, 15, true, false, 1.0m),
+            P("Chicken Thigh Fillets", "1kg boneless skinless thigh fillets", "PM-CP-002", cat("Chicken Portions"), brand("Valley Fresh"), 12.99m, 6m, 70, 12, true, false, 1.0m),
+            P("Chicken Drumsticks", "1kg free-range drumsticks (6-8 pieces)", "PM-CP-003", cat("Chicken Portions"), brand("Valley Fresh"), 9.99m, 4m, 60, 10, true, false, 1.0m),
+            P("Chicken Wings", "1kg chicken wings, perfect for marinating", "PM-CP-004", cat("Chicken Portions"), brand("Valley Fresh"), 8.99m, 4m, 50, 10, true, false, 1.0m),
+            P("Chicken Skewers (Marinated)", "8-pack satay marinated chicken skewers", "PM-CP-005", cat("Chicken Portions"), brand("Grill Master"), 16.99m, 8m, 40, 8, true, true, 0.6m),
 
-            // Veal (3)
-            P("Veal Scallopini", "400g thinly sliced veal leg steaks", "PM-VL-001", cat("Veal"), brand("Primo Cuts"), 26.99m, 14m, 25, 5, true, false, 0.4m),
-            P("Veal Osso Buco", "1kg cross-cut veal shank, 3cm thick", "PM-VL-002", cat("Veal"), brand("Primo Cuts"), 34.99m, 18m, 20, 4, true, true, 1.0m),
-            P("Veal Cutlets", "4-pack bone-in veal rib cutlets", "PM-VL-003", cat("Veal"), brand("Primo Cuts"), 38.99m, 22m, 15, 3, true, false, 0.5m),
+            // ── Whole Birds (4) ──────────────────────────────────
+            P("Whole Chicken (Boned & Rolled)", "1.8kg whole free-range chicken, boned and rolled", "PM-WB-001", cat("Whole Birds"), brand("Valley Fresh"), 60.00m, 32m, 15, 3, true, true, 1.8m),
+            P("Whole Chicken (Butterflied)", "1.5kg spatchcocked and flattened chicken", "PM-WB-002", cat("Whole Birds"), brand("Valley Fresh"), 22.00m, 11m, 20, 4, true, false, 1.5m),
+            P("Whole Chicken (Butterflied & Marinated)", "1.5kg butterflied chicken in lemon herb marinade", "PM-WB-003", cat("Whole Birds"), brand("Grill Master"), 28.50m, 14m, 20, 4, true, true, 1.5m),
+            P("Duck (Whole)", "2.2kg whole Pekin duck", "PM-WB-004", cat("Whole Birds"), brand("Valley Fresh"), 32.99m, 18m, 10, 2, true, false, 2.2m),
 
-            // Sausages & Burgers (5)
-            P("Beef BBQ Sausages", "6-pack classic thick beef sausages", "PM-SB-001", cat("Sausages & Burgers"), brand("Grill Master"), 12.99m, 5m, 80, 15, true, false, 0.6m),
-            P("Pork & Fennel Sausages", "6-pack Italian-style pork and fennel", "PM-SB-002", cat("Sausages & Burgers"), brand("Grill Master"), 14.99m, 6m, 60, 10, true, true, 0.6m),
-            P("Lamb & Rosemary Sausages", "6-pack lamb sausages with rosemary", "PM-SB-003", cat("Sausages & Burgers"), brand("Grill Master"), 15.99m, 7m, 50, 10, true, false, 0.6m),
-            P("Gourmet Beef Burgers", "4-pack 150g premium beef burger patties", "PM-SB-004", cat("Sausages & Burgers"), brand("Grill Master"), 16.99m, 8m, 60, 10, true, true, 0.6m),
-            P("Chorizo Sausages", "4-pack spicy Spanish-style chorizo", "PM-SB-005", cat("Sausages & Burgers"), brand("Grill Master"), 13.99m, 6m, 40, 8, true, false, 0.4m),
+            // ── Deli & Cold Cuts (6) ─────────────────────────────
+            P("Ham (Half Leg)", "3kg honey-glazed half leg ham", "PM-DL-001", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 110.00m, 60m, 10, 2, true, true, 3.0m),
+            P("Ham (Whole Leg)", "6kg whole glazed leg ham, feeds a crowd", "PM-DL-002", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 220.00m, 120m, 5, 2, true, true, 6.0m),
+            P("Chorizo (Small)", "300g spicy Spanish-style chorizo", "PM-DL-003", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 12.50m, 5m, 40, 8, true, false, 0.3m),
+            P("Prosciutto (Sliced)", "150g thinly sliced aged prosciutto", "PM-DL-004", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 14.99m, 7m, 40, 8, true, true, 0.15m),
+            P("Salami Milano", "200g traditional Milano-style salami", "PM-DL-005", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 12.99m, 6m, 35, 8, true, false, 0.2m),
+            P("Antipasto Platter", "500g mixed cured meats, olives and pickled vegetables", "PM-DL-006", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 24.00m, 12m, 20, 4, true, true, 0.5m),
 
-            // Deli & Cold Cuts (4)
-            P("Prosciutto (Sliced)", "150g thinly sliced aged prosciutto", "PM-DL-001", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 14.99m, 7m, 40, 8, true, true, 0.15m),
-            P("Salami Milano", "200g traditional Milano-style salami", "PM-DL-002", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 12.99m, 6m, 35, 8, true, false, 0.2m),
-            P("Antipasto Platter", "500g mixed cured meats, olives and pickled vegetables", "PM-DL-003", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 29.99m, 14m, 20, 4, true, true, 0.5m),
-            P("Leg Ham (Sliced)", "200g honey-glazed leg ham slices", "PM-DL-004", cat("Deli & Cold Cuts"), brand("Artisan Kitchen"), 9.99m, 4m, 50, 10, true, false, 0.2m),
-
-            // Italian Classics (3)
+            // ── Italian Classics (3) ─────────────────────────────
             P("Beef Lasagne", "1kg family-size beef and bechamel lasagne", "PM-RM-001", cat("Italian Classics"), brand("Artisan Kitchen"), 24.99m, 12m, 20, 4, true, true, 1.0m),
-            P("Lamb Arancini (6 pack)", "6 golden-crumbed risotto balls with lamb ragu", "PM-RM-002", cat("Italian Classics"), brand("Artisan Kitchen"), 18.99m, 8m, 25, 5, true, false, 0.45m),
-            P("Veal Involtini", "4-pack veal rolls stuffed with prosciutto and sage", "PM-RM-003", cat("Italian Classics"), brand("Artisan Kitchen"), 28.99m, 14m, 15, 3, true, true, 0.5m),
+            P("Arancini (6 pack)", "6 golden-crumbed risotto balls with lamb ragù", "PM-RM-002", cat("Italian Classics"), brand("Artisan Kitchen"), 24.00m, 10m, 25, 5, true, true, 0.45m),
+            P("Bolognese Sauce", "750g slow-cooked traditional Bolognese meat sauce", "PM-RM-003", cat("Italian Classics"), brand("Artisan Kitchen"), 18.00m, 8m, 30, 5, true, false, 0.75m),
 
-            // Curries & Stews (2)
-            P("Slow-Cooked Beef Ragu", "750g rich beef ragu with red wine and herbs", "PM-CS-001", cat("Curries & Stews"), brand("Artisan Kitchen"), 22.99m, 10m, 20, 4, true, false, 0.75m),
+            // ── Sausages & Burgers (6) ───────────────────────────
+            P("Beef BBQ Sausages", "6-pack classic thick beef sausages", "PM-SB-001", cat("Sausages & Burgers"), brand("Grill Master"), 14.00m, 5m, 80, 15, true, false, 0.6m),
+            P("Pork Sausages - Italian (Thin)", "6-pack thin Italian-style pork sausages", "PM-SB-002", cat("Sausages & Burgers"), brand("Grill Master"), 14.00m, 6m, 60, 10, true, true, 0.5m),
+            P("Lamb & Rosemary Sausages", "6-pack lamb sausages with fresh rosemary", "PM-SB-003", cat("Sausages & Burgers"), brand("Grill Master"), 16.00m, 7m, 50, 10, true, false, 0.6m),
+            P("Gourmet Beef Burgers", "4-pack 150g premium beef burger patties", "PM-SB-004", cat("Sausages & Burgers"), brand("Grill Master"), 4.00m, 2m, 60, 10, true, true, 0.6m),
+            P("Pork & Fennel Sausages", "6-pack Italian-style pork and fennel", "PM-SB-005", cat("Sausages & Burgers"), brand("Grill Master"), 14.99m, 6m, 50, 10, true, false, 0.6m),
+            P("Chicken Sausages", "6-pack lean chicken sausages with herbs", "PM-SB-006", cat("Sausages & Burgers"), brand("Grill Master"), 13.00m, 5m, 40, 8, true, false, 0.5m),
+
+            // ── Curries & Stews (2) ──────────────────────────────
+            P("Slow-Cooked Beef Ragù", "750g rich beef ragù with red wine and herbs", "PM-CS-001", cat("Curries & Stews"), brand("Artisan Kitchen"), 22.99m, 10m, 20, 4, true, false, 0.75m),
             P("Lamb Massaman Curry", "700g tender lamb in massaman curry sauce", "PM-CS-002", cat("Curries & Stews"), brand("Artisan Kitchen"), 24.99m, 12m, 18, 4, true, false, 0.7m),
 
-            // Pantry (3)
-            P("Bronze-Cut Penne Rigate", "500g Italian dried bronze-cut penne", "PM-PT-001", cat("Pantry"), brand("Rustic Pantry"), 6.99m, 2.5m, 100, 20, true, false, 0.5m),
-            P("Sugo di Pomodoro", "500ml slow-cooked tomato pasta sauce", "PM-PT-002", cat("Pantry"), brand("Rustic Pantry"), 8.99m, 3m, 80, 15, true, false, 0.5m),
-            P("Extra Virgin Olive Oil", "500ml cold-pressed Sicilian olive oil", "PM-PT-003", cat("Pantry"), brand("Rustic Pantry"), 18.99m, 8m, 50, 10, true, true, 0.5m),
+            // ── Pasta & Sauces (4) ──────────────────────────────
+            P("Rustichella Spaghetti", "500g bronze-cut Italian dried spaghetti", "PM-PT-001", cat("Pasta & Sauces"), brand("Rustic Pantry"), 9.95m, 4m, 80, 15, true, false, 0.5m),
+            P("Arrabiata Pasta Sauce", "500ml Rustichella d'Abruzzo arrabiata sauce", "PM-PT-002", cat("Pasta & Sauces"), brand("Rustic Pantry"), 18.50m, 8m, 50, 10, true, true, 0.5m),
+            P("Sugo di Pomodoro", "500ml slow-cooked tomato pasta sauce", "PM-PT-003", cat("Pasta & Sauces"), brand("Rustic Pantry"), 8.99m, 3m, 80, 15, true, false, 0.5m),
+            P("Penne Rigate", "500g Italian dried bronze-cut penne", "PM-PT-004", cat("Pasta & Sauces"), brand("Rustic Pantry"), 6.99m, 2.5m, 100, 20, true, false, 0.5m),
 
-            // Marinades & Rubs (3)
-            P("Chimichurri Marinade", "250ml fresh herb and garlic chimichurri", "PM-MR-001", cat("Marinades & Rubs"), brand("Grill Master"), 9.99m, 3m, 60, 10, true, false, 0.25m),
-            P("Smoky BBQ Rub", "150g house-blend smoky barbecue spice rub", "PM-MR-002", cat("Marinades & Rubs"), brand("Grill Master"), 7.99m, 2m, 80, 15, true, true, 0.15m),
-            P("Lemon & Herb Marinade", "250ml zesty lemon and herb marinade for poultry", "PM-MR-003", cat("Marinades & Rubs"), brand("Grill Master"), 8.99m, 3m, 60, 10, true, false, 0.25m),
+            // ── Oils & Seasonings (4) ────────────────────────────
+            P("Extra Virgin Olive Oil", "500ml cold-pressed Sicilian olive oil", "PM-OS-001", cat("Oils & Seasonings"), brand("Rustic Pantry"), 18.99m, 8m, 50, 10, true, true, 0.5m),
+            P("Murray River Pink Salt Flakes", "200g premium Australian pink salt", "PM-OS-002", cat("Oils & Seasonings"), brand("Rustic Pantry"), 9.95m, 4m, 60, 10, true, false, 0.2m),
+            P("Chimichurri Marinade", "250ml fresh herb and garlic chimichurri", "PM-OS-003", cat("Oils & Seasonings"), brand("Grill Master"), 9.99m, 3m, 60, 10, true, false, 0.25m),
+            P("Smoky BBQ Rub", "150g house-blend smoky barbecue spice rub", "PM-OS-004", cat("Oils & Seasonings"), brand("Grill Master"), 7.99m, 2m, 80, 15, true, true, 0.15m),
         };
 
         context.Products.AddRange(products);
@@ -298,12 +326,18 @@ public static class DatabaseSeeder
         var sausages = products.First(p => p.SKU == "PM-SB-001");
         var sausageFlavours = new[] { "Original", "Pepper & Onion", "Smoky BBQ" };
         foreach (var flavour in sausageFlavours)
-            context.ProductVariants.Add(new ProductVariant { ProductId = sausages.Id, VariantName = flavour, SKU = $"PM-SB-001-{flavour[..3].ToUpper()}", Price = 12.99m, StockQuantity = 25, Attributes = $"{{\"flavour\":\"{flavour}\"}}", CreatedBy = "system" });
+            context.ProductVariants.Add(new ProductVariant { ProductId = sausages.Id, VariantName = flavour, SKU = $"PM-SB-001-{flavour[..3].ToUpper()}", Price = 14.00m, StockQuantity = 25, Attributes = $"{{\"flavour\":\"{flavour}\"}}", CreatedBy = "system" });
 
         // Add variants for Gourmet Beef Burgers (size)
         var burgers = products.First(p => p.SKU == "PM-SB-004");
-        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "4-pack", SKU = "PM-SB-004-4PK", Price = 16.99m, StockQuantity = 40, Attributes = "{\"size\":\"4-pack\"}", CreatedBy = "system" });
-        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "8-pack", SKU = "PM-SB-004-8PK", Price = 29.99m, StockQuantity = 20, Attributes = "{\"size\":\"8-pack\"}", CreatedBy = "system" });
+        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "Single", SKU = "PM-SB-004-1PK", Price = 4.00m, StockQuantity = 80, Attributes = "{\"size\":\"single\"}", CreatedBy = "system" });
+        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "4-pack", SKU = "PM-SB-004-4PK", Price = 14.00m, StockQuantity = 40, Attributes = "{\"size\":\"4-pack\"}", CreatedBy = "system" });
+        context.ProductVariants.Add(new ProductVariant { ProductId = burgers.Id, VariantName = "8-pack", SKU = "PM-SB-004-8PK", Price = 26.00m, StockQuantity = 20, Attributes = "{\"size\":\"8-pack\"}", CreatedBy = "system" });
+
+        // Add variants for Porchetta (size)
+        var porchetta = products.First(p => p.SKU == "PM-PR-001");
+        context.ProductVariants.Add(new ProductVariant { ProductId = porchetta.Id, VariantName = "Small (1kg)", SKU = "PM-PR-001-SM", Price = 50.00m, StockQuantity = 10, Attributes = "{\"size\":\"1kg\"}", CreatedBy = "system" });
+        context.ProductVariants.Add(new ProductVariant { ProductId = porchetta.Id, VariantName = "Large (2kg)", SKU = "PM-PR-001-LG", Price = 90.00m, StockQuantity = 8, Attributes = "{\"size\":\"2kg\"}", CreatedBy = "system" });
 
         await context.SaveChangesAsync();
     }
@@ -316,7 +350,6 @@ public static class DatabaseSeeder
         if (await context.ProductImages.AnyAsync()) return;
         var products = await context.Products.ToListAsync();
 
-        // Map SKU prefixes to Unsplash photo URLs (royalty-free)
         var imageMap = new Dictionary<string, string[]>
         {
             // Beef Steaks
@@ -324,69 +357,92 @@ public static class DatabaseSeeder
             ["PM-BS-002"] = new[] { "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800" },
             ["PM-BS-003"] = new[] { "https://images.unsplash.com/photo-1551028150-64b9f398f678?w=800" },
             ["PM-BS-004"] = new[] { "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800" },
-            ["PM-BS-005"] = new[] { "https://images.unsplash.com/photo-1615937722923-67f6deaf2cc9?w=800", "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800" },
-            // Beef Roasting
+            ["PM-BS-005"] = new[] { "https://images.unsplash.com/photo-1544025162-d76694265947?w=800" },
+            ["PM-BS-006"] = new[] { "https://images.unsplash.com/photo-1615937722923-67f6deaf2cc9?w=800", "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800" },
+            ["PM-BS-007"] = new[] { "https://images.unsplash.com/photo-1529694157872-4e0c0f3b238b?w=800" },
+            // Beef Roasting Joints
             ["PM-BR-001"] = new[] { "https://images.unsplash.com/photo-1588347818481-0e7b4e5f4e94?w=800" },
-            ["PM-BR-002"] = new[] { "https://images.unsplash.com/photo-1544025162-d76694265947?w=800" },
+            ["PM-BR-002"] = new[] { "https://images.unsplash.com/photo-1560781290-7dc94c0f8f4f?w=800" },
             ["PM-BR-003"] = new[] { "https://images.unsplash.com/photo-1529694157872-4e0c0f3b238b?w=800" },
-            ["PM-BR-004"] = new[] { "https://images.unsplash.com/photo-1560781290-7dc94c0f8f4f?w=800" },
+            ["PM-BR-004"] = new[] { "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800" },
+            ["PM-BR-005"] = new[] { "https://images.unsplash.com/photo-1558030006-450675393462?w=800" },
             // Beef Other
             ["PM-BO-001"] = new[] { "https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=800" },
             ["PM-BO-002"] = new[] { "https://images.unsplash.com/photo-1551135049-8a33b5883817?w=800" },
             ["PM-BO-003"] = new[] { "https://images.unsplash.com/photo-1609167830220-7164aa7bf827?w=800" },
             ["PM-BO-004"] = new[] { "https://images.unsplash.com/photo-1612487439139-c2dea1a345c7?w=800" },
-            // Lamb
-            ["PM-LC-001"] = new[] { "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800" },
-            ["PM-LC-002"] = new[] { "https://images.unsplash.com/photo-1514516345957-556ca7d90a29?w=800" },
-            ["PM-LC-003"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
-            ["PM-LC-004"] = new[] { "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800" },
+            // Veal
+            ["PM-VS-001"] = new[] { "https://images.unsplash.com/photo-1607116667981-68bd72c3a0ef?w=800" },
+            ["PM-VS-002"] = new[] { "https://images.unsplash.com/photo-1619221882266-14ef84780a0e?w=800" },
+            ["PM-VS-003"] = new[] { "https://images.unsplash.com/photo-1610540881590-e9f5e1d11d63?w=800" },
+            ["PM-VX-001"] = new[] { "https://images.unsplash.com/photo-1612487439139-c2dea1a345c7?w=800" },
+            ["PM-VX-002"] = new[] { "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800" },
+            ["PM-VX-003"] = new[] { "https://images.unsplash.com/photo-1619221882266-14ef84780a0e?w=800" },
+            // Lamb Chops & Cutlets
+            ["PM-LC-001"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
+            ["PM-LC-002"] = new[] { "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800" },
+            ["PM-LC-003"] = new[] { "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800" },
+            ["PM-LC-004"] = new[] { "https://images.unsplash.com/photo-1514516345957-556ca7d90a29?w=800" },
+            ["PM-LC-005"] = new[] { "https://images.unsplash.com/photo-1608877907149-a206d75ba011?w=800" },
+            // Lamb Roasting Joints
             ["PM-LR-001"] = new[] { "https://images.unsplash.com/photo-1608877907149-a206d75ba011?w=800" },
             ["PM-LR-002"] = new[] { "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800" },
             ["PM-LR-003"] = new[] { "https://images.unsplash.com/photo-1606728035253-49e8a23146de?w=800" },
-            // Pork
+            ["PM-LR-004"] = new[] { "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800" },
+            // Pork Steaks & Chops
             ["PM-PS-001"] = new[] { "https://images.unsplash.com/photo-1623174479650-562c9a8af8fa?w=800" },
             ["PM-PS-002"] = new[] { "https://images.unsplash.com/photo-1606568218095-54b5f6b6e1a8?w=800" },
             ["PM-PS-003"] = new[] { "https://images.unsplash.com/photo-1610540881590-e9f5e1d11d63?w=800" },
+            // Pork Roasting Joints
             ["PM-PR-001"] = new[] { "https://images.unsplash.com/photo-1592686092538-a77869c15422?w=800", "https://images.unsplash.com/photo-1625938393824-e9ace9a7c8ff?w=800" },
             ["PM-PR-002"] = new[] { "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=800" },
             ["PM-PR-003"] = new[] { "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800" },
-            // Chicken
-            ["PM-CB-001"] = new[] { "https://images.unsplash.com/photo-1604503468506-a8da13d82f2b?w=800" },
-            ["PM-CB-002"] = new[] { "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800" },
-            ["PM-CB-003"] = new[] { "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800" },
-            ["PM-CB-004"] = new[] { "https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=800" },
+            // Pork Other Cuts
+            ["PM-PO-001"] = new[] { "https://images.unsplash.com/photo-1592686092538-a77869c15422?w=800" },
+            ["PM-PO-002"] = new[] { "https://images.unsplash.com/photo-1625938393824-e9ace9a7c8ff?w=800" },
+            ["PM-PO-003"] = new[] { "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800" },
+            // Chicken Portions
+            ["PM-CP-001"] = new[] { "https://images.unsplash.com/photo-1604503468506-a8da13d82f2b?w=800" },
+            ["PM-CP-002"] = new[] { "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800" },
+            ["PM-CP-003"] = new[] { "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800" },
+            ["PM-CP-004"] = new[] { "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=800" },
+            ["PM-CP-005"] = new[] { "https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=800" },
+            // Whole Birds
             ["PM-WB-001"] = new[] { "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800" },
             ["PM-WB-002"] = new[] { "https://images.unsplash.com/photo-1501200291289-c5a76c232e5f?w=800" },
-            ["PM-WB-003"] = new[] { "https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=800" },
-            // Veal
-            ["PM-VL-001"] = new[] { "https://images.unsplash.com/photo-1607116667981-68bd72c3a0ef?w=800" },
-            ["PM-VL-002"] = new[] { "https://images.unsplash.com/photo-1612487439139-c2dea1a345c7?w=800" },
-            ["PM-VL-003"] = new[] { "https://images.unsplash.com/photo-1619221882266-14ef84780a0e?w=800" },
+            ["PM-WB-003"] = new[] { "https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=800" },
+            ["PM-WB-004"] = new[] { "https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=800" },
+            // Deli & Cold Cuts
+            ["PM-DL-001"] = new[] { "https://images.unsplash.com/photo-1524438418049-ab2acb7aa48f?w=800" },
+            ["PM-DL-002"] = new[] { "https://images.unsplash.com/photo-1544025162-d76694265947?w=800" },
+            ["PM-DL-003"] = new[] { "https://images.unsplash.com/photo-1606851091519-5d0b4e4a0069?w=800" },
+            ["PM-DL-004"] = new[] { "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800" },
+            ["PM-DL-005"] = new[] { "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=800" },
+            ["PM-DL-006"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
+            // Italian Classics
+            ["PM-RM-001"] = new[] { "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800" },
+            ["PM-RM-002"] = new[] { "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=800" },
+            ["PM-RM-003"] = new[] { "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800" },
             // Sausages & Burgers
             ["PM-SB-001"] = new[] { "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800" },
             ["PM-SB-002"] = new[] { "https://images.unsplash.com/photo-1627309302198-09a50ae3d566?w=800" },
             ["PM-SB-003"] = new[] { "https://images.unsplash.com/photo-1587536849024-daaa4a417b16?w=800" },
             ["PM-SB-004"] = new[] { "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800" },
-            ["PM-SB-005"] = new[] { "https://images.unsplash.com/photo-1606851091519-5d0b4e4a0069?w=800" },
-            // Deli
-            ["PM-DL-001"] = new[] { "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800" },
-            ["PM-DL-002"] = new[] { "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=800" },
-            ["PM-DL-003"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
-            ["PM-DL-004"] = new[] { "https://images.unsplash.com/photo-1524438418049-ab2acb7aa48f?w=800" },
-            // Ready Meals
-            ["PM-RM-001"] = new[] { "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800" },
-            ["PM-RM-002"] = new[] { "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=800" },
-            ["PM-RM-003"] = new[] { "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800" },
+            ["PM-SB-005"] = new[] { "https://images.unsplash.com/photo-1627309302198-09a50ae3d566?w=800" },
+            ["PM-SB-006"] = new[] { "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800" },
+            // Curries & Stews
             ["PM-CS-001"] = new[] { "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800" },
             ["PM-CS-002"] = new[] { "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800" },
-            // Pantry
+            // Pasta & Sauces
             ["PM-PT-001"] = new[] { "https://images.unsplash.com/photo-1551462147-37885acc36f1?w=800" },
             ["PM-PT-002"] = new[] { "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=800" },
-            ["PM-PT-003"] = new[] { "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800" },
-            // Marinades
-            ["PM-MR-001"] = new[] { "https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=800" },
-            ["PM-MR-002"] = new[] { "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800" },
-            ["PM-MR-003"] = new[] { "https://images.unsplash.com/photo-1621955964441-c173e01c6668?w=800" },
+            ["PM-PT-003"] = new[] { "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=800" },
+            ["PM-PT-004"] = new[] { "https://images.unsplash.com/photo-1551462147-37885acc36f1?w=800" },
+            // Oils & Seasonings
+            ["PM-OS-001"] = new[] { "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800" },
+            ["PM-OS-002"] = new[] { "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800" },
+            ["PM-OS-003"] = new[] { "https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=800" },
+            ["PM-OS-004"] = new[] { "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800" },
         };
 
         var images = new List<ProductImage>();
@@ -461,7 +517,7 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
 
         // Link products to offers
-        var bbqProducts = products.Where(p => p.SKU.StartsWith("PM-SB") || p.SKU.StartsWith("PM-MR")).ToList();
+        var bbqProducts = products.Where(p => p.SKU.StartsWith("PM-SB") || p.SKU.StartsWith("PM-OS")).ToList();
         foreach (var p in bbqProducts)
             context.SpecialOfferProducts.Add(new SpecialOfferProduct { SpecialOfferId = offers[0].Id, ProductId = p.Id, CreatedBy = "system" });
 
