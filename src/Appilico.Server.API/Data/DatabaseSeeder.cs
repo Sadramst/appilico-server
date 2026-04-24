@@ -30,6 +30,7 @@ public static class DatabaseSeeder
             await SeedCategoriesAsync(context);
             await SeedBrandsAsync(context);
             await SeedProductsAsync(context);
+            await SeedProductImagesAsync(context);
             await SeedDiscountsAsync(context);
             await SeedVouchersAsync(context);
             await SeedSpecialOffersAsync(context);
@@ -309,6 +310,108 @@ public static class DatabaseSeeder
 
     private static Product P(string name, string desc, string sku, Category cat, Brand brand, decimal price, decimal cost, int stock, int min, bool active, bool featured, decimal weight)
         => new() { Name = name, Description = desc, SKU = sku, CategoryId = cat.Id, BrandId = brand.Id, BasePrice = price, CostPrice = cost, StockQuantity = stock, MinStockLevel = min, IsActive = active, IsFeatured = featured, Weight = weight, CreatedBy = "system" };
+
+    private static async Task SeedProductImagesAsync(AppDbContext context)
+    {
+        if (await context.ProductImages.AnyAsync()) return;
+        var products = await context.Products.ToListAsync();
+
+        // Map SKU prefixes to Unsplash photo URLs (royalty-free)
+        var imageMap = new Dictionary<string, string[]>
+        {
+            // Beef Steaks
+            ["PM-BS-001"] = new[] { "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800", "https://images.unsplash.com/photo-1558030006-450675393462?w=800" },
+            ["PM-BS-002"] = new[] { "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800" },
+            ["PM-BS-003"] = new[] { "https://images.unsplash.com/photo-1551028150-64b9f398f678?w=800" },
+            ["PM-BS-004"] = new[] { "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800" },
+            ["PM-BS-005"] = new[] { "https://images.unsplash.com/photo-1615937722923-67f6deaf2cc9?w=800", "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800" },
+            // Beef Roasting
+            ["PM-BR-001"] = new[] { "https://images.unsplash.com/photo-1588347818481-0e7b4e5f4e94?w=800" },
+            ["PM-BR-002"] = new[] { "https://images.unsplash.com/photo-1544025162-d76694265947?w=800" },
+            ["PM-BR-003"] = new[] { "https://images.unsplash.com/photo-1529694157872-4e0c0f3b238b?w=800" },
+            ["PM-BR-004"] = new[] { "https://images.unsplash.com/photo-1560781290-7dc94c0f8f4f?w=800" },
+            // Beef Other
+            ["PM-BO-001"] = new[] { "https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=800" },
+            ["PM-BO-002"] = new[] { "https://images.unsplash.com/photo-1551135049-8a33b5883817?w=800" },
+            ["PM-BO-003"] = new[] { "https://images.unsplash.com/photo-1609167830220-7164aa7bf827?w=800" },
+            ["PM-BO-004"] = new[] { "https://images.unsplash.com/photo-1612487439139-c2dea1a345c7?w=800" },
+            // Lamb
+            ["PM-LC-001"] = new[] { "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800" },
+            ["PM-LC-002"] = new[] { "https://images.unsplash.com/photo-1514516345957-556ca7d90a29?w=800" },
+            ["PM-LC-003"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
+            ["PM-LC-004"] = new[] { "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800" },
+            ["PM-LR-001"] = new[] { "https://images.unsplash.com/photo-1608877907149-a206d75ba011?w=800" },
+            ["PM-LR-002"] = new[] { "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800" },
+            ["PM-LR-003"] = new[] { "https://images.unsplash.com/photo-1606728035253-49e8a23146de?w=800" },
+            // Pork
+            ["PM-PS-001"] = new[] { "https://images.unsplash.com/photo-1623174479650-562c9a8af8fa?w=800" },
+            ["PM-PS-002"] = new[] { "https://images.unsplash.com/photo-1606568218095-54b5f6b6e1a8?w=800" },
+            ["PM-PS-003"] = new[] { "https://images.unsplash.com/photo-1610540881590-e9f5e1d11d63?w=800" },
+            ["PM-PR-001"] = new[] { "https://images.unsplash.com/photo-1592686092538-a77869c15422?w=800", "https://images.unsplash.com/photo-1625938393824-e9ace9a7c8ff?w=800" },
+            ["PM-PR-002"] = new[] { "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=800" },
+            ["PM-PR-003"] = new[] { "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800" },
+            // Chicken
+            ["PM-CB-001"] = new[] { "https://images.unsplash.com/photo-1604503468506-a8da13d82f2b?w=800" },
+            ["PM-CB-002"] = new[] { "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800" },
+            ["PM-CB-003"] = new[] { "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800" },
+            ["PM-CB-004"] = new[] { "https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=800" },
+            ["PM-WB-001"] = new[] { "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800" },
+            ["PM-WB-002"] = new[] { "https://images.unsplash.com/photo-1501200291289-c5a76c232e5f?w=800" },
+            ["PM-WB-003"] = new[] { "https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=800" },
+            // Veal
+            ["PM-VL-001"] = new[] { "https://images.unsplash.com/photo-1607116667981-68bd72c3a0ef?w=800" },
+            ["PM-VL-002"] = new[] { "https://images.unsplash.com/photo-1612487439139-c2dea1a345c7?w=800" },
+            ["PM-VL-003"] = new[] { "https://images.unsplash.com/photo-1619221882266-14ef84780a0e?w=800" },
+            // Sausages & Burgers
+            ["PM-SB-001"] = new[] { "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800" },
+            ["PM-SB-002"] = new[] { "https://images.unsplash.com/photo-1627309302198-09a50ae3d566?w=800" },
+            ["PM-SB-003"] = new[] { "https://images.unsplash.com/photo-1587536849024-daaa4a417b16?w=800" },
+            ["PM-SB-004"] = new[] { "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800" },
+            ["PM-SB-005"] = new[] { "https://images.unsplash.com/photo-1606851091519-5d0b4e4a0069?w=800" },
+            // Deli
+            ["PM-DL-001"] = new[] { "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800" },
+            ["PM-DL-002"] = new[] { "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=800" },
+            ["PM-DL-003"] = new[] { "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=800" },
+            ["PM-DL-004"] = new[] { "https://images.unsplash.com/photo-1524438418049-ab2acb7aa48f?w=800" },
+            // Ready Meals
+            ["PM-RM-001"] = new[] { "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=800" },
+            ["PM-RM-002"] = new[] { "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=800" },
+            ["PM-RM-003"] = new[] { "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800" },
+            ["PM-CS-001"] = new[] { "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800" },
+            ["PM-CS-002"] = new[] { "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800" },
+            // Pantry
+            ["PM-PT-001"] = new[] { "https://images.unsplash.com/photo-1551462147-37885acc36f1?w=800" },
+            ["PM-PT-002"] = new[] { "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=800" },
+            ["PM-PT-003"] = new[] { "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800" },
+            // Marinades
+            ["PM-MR-001"] = new[] { "https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=800" },
+            ["PM-MR-002"] = new[] { "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800" },
+            ["PM-MR-003"] = new[] { "https://images.unsplash.com/photo-1621955964441-c173e01c6668?w=800" },
+        };
+
+        var images = new List<ProductImage>();
+        foreach (var product in products)
+        {
+            if (imageMap.TryGetValue(product.SKU, out var urls))
+            {
+                for (int i = 0; i < urls.Length; i++)
+                {
+                    images.Add(new ProductImage
+                    {
+                        ProductId = product.Id,
+                        ImageUrl = urls[i],
+                        AltText = product.Name,
+                        SortOrder = i,
+                        IsPrimary = i == 0,
+                        CreatedBy = "system"
+                    });
+                }
+            }
+        }
+
+        context.ProductImages.AddRange(images);
+        await context.SaveChangesAsync();
+    }
 
     private static async Task SeedDiscountsAsync(AppDbContext context)
     {
