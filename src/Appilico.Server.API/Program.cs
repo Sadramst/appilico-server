@@ -124,7 +124,8 @@ var allowedOrigins = new[]
 {
     "http://localhost:3000",
     "https://appilico-client-aif9.vercel.app",
-    "https://appilico-client.vercel.app"
+    "https://appilico-client.vercel.app",
+    "https://appilico-web.vercel.app"
 };
 
 builder.Services.AddCors(options =>
