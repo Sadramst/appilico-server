@@ -16,10 +16,19 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     /// <inheritdoc/>
     public async Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId)
     {
+        var subCategoryIds = await _context.Categories
+            .Where(c => c.ParentCategoryId == categoryId)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        var categoryIds = subCategoryIds.Count > 0
+            ? subCategoryIds.Append(categoryId).ToList()
+            : new List<Guid> { categoryId };
+
         return await _dbSet
             .Include(p => p.Images)
             .Include(p => p.Brand)
-            .Where(p => p.CategoryId == categoryId)
+            .Where(p => categoryIds.Contains(p.CategoryId))
             .ToListAsync();
     }
 
@@ -69,7 +78,22 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         }
 
         if (categoryId.HasValue)
-            query = query.Where(p => p.CategoryId == categoryId.Value);
+        {
+            var subCategoryIds = await _context.Categories
+                .Where(c => c.ParentCategoryId == categoryId.Value)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            if (subCategoryIds.Count > 0)
+            {
+                subCategoryIds.Add(categoryId.Value);
+                query = query.Where(p => subCategoryIds.Contains(p.CategoryId));
+            }
+            else
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+        }
 
         if (brandId.HasValue)
             query = query.Where(p => p.BrandId == brandId.Value);
