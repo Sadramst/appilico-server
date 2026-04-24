@@ -13,7 +13,7 @@ public class RefundConfiguration : IEntityTypeConfiguration<Refund>
     public void Configure(EntityTypeBuilder<Refund> builder)
     {
         builder.HasKey(r => r.Id);
-        builder.Property(r => r.Amount).HasColumnType("decimal(18,2)");
+        builder.Property(r => r.Amount).HasColumnType("numeric(18,2)");
         builder.Property(r => r.Reason).HasMaxLength(1000);
 
         builder.HasOne(r => r.Order)

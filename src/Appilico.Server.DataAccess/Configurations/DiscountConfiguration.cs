@@ -17,9 +17,9 @@ public class DiscountConfiguration : IEntityTypeConfiguration<Discount>
         builder.HasIndex(d => d.Code).IsUnique();
         builder.Property(d => d.Name).HasMaxLength(200).IsRequired();
         builder.Property(d => d.Description).HasMaxLength(1000);
-        builder.Property(d => d.Value).HasColumnType("decimal(18,2)");
-        builder.Property(d => d.MinOrderAmount).HasColumnType("decimal(18,2)");
-        builder.Property(d => d.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+        builder.Property(d => d.Value).HasColumnType("numeric(18,2)");
+        builder.Property(d => d.MinOrderAmount).HasColumnType("numeric(18,2)");
+        builder.Property(d => d.MaxDiscountAmount).HasColumnType("numeric(18,2)");
         builder.HasQueryFilter(d => !d.IsDeleted);
     }
 }

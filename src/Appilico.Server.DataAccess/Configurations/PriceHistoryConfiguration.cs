@@ -13,8 +13,8 @@ public class PriceHistoryConfiguration : IEntityTypeConfiguration<PriceHistory>
     public void Configure(EntityTypeBuilder<PriceHistory> builder)
     {
         builder.HasKey(ph => ph.Id);
-        builder.Property(ph => ph.OldPrice).HasColumnType("decimal(18,2)");
-        builder.Property(ph => ph.NewPrice).HasColumnType("decimal(18,2)");
+        builder.Property(ph => ph.OldPrice).HasColumnType("numeric(18,2)");
+        builder.Property(ph => ph.NewPrice).HasColumnType("numeric(18,2)");
         builder.HasQueryFilter(ph => !ph.IsDeleted);
     }
 }

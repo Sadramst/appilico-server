@@ -16,6 +16,9 @@ public class Category : BaseAuditableEntity
     /// <summary>Gets or sets the category image URL.</summary>
     public string? ImageUrl { get; set; }
 
+    /// <summary>Gets or sets the Cloudinary public ID for the image.</summary>
+    public string? CloudinaryPublicId { get; set; }
+
     /// <summary>Gets or sets the parent category ID for hierarchy (FK-self).</summary>
     public Guid? ParentCategoryId { get; set; }
 

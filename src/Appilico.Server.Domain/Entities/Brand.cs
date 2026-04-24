@@ -16,6 +16,9 @@ public class Brand : BaseAuditableEntity
     /// <summary>Gets or sets the brand logo URL.</summary>
     public string? LogoUrl { get; set; }
 
+    /// <summary>Gets or sets the Cloudinary public ID for the logo.</summary>
+    public string? CloudinaryPublicId { get; set; }
+
     /// <summary>Gets or sets whether the brand is active.</summary>
     public bool IsActive { get; set; } = true;
 

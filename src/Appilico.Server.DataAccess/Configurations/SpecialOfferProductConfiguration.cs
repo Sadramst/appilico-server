@@ -13,7 +13,7 @@ public class SpecialOfferProductConfiguration : IEntityTypeConfiguration<Special
     public void Configure(EntityTypeBuilder<SpecialOfferProduct> builder)
     {
         builder.HasKey(sop => sop.Id);
-        builder.Property(sop => sop.OfferPrice).HasColumnType("decimal(18,2)");
+        builder.Property(sop => sop.OfferPrice).HasColumnType("numeric(18,2)");
 
         builder.HasOne(sop => sop.Product)
             .WithMany(p => p.SpecialOfferProducts)

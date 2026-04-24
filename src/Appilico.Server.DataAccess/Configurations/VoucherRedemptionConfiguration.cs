@@ -13,7 +13,7 @@ public class VoucherRedemptionConfiguration : IEntityTypeConfiguration<VoucherRe
     public void Configure(EntityTypeBuilder<VoucherRedemption> builder)
     {
         builder.HasKey(vr => vr.Id);
-        builder.Property(vr => vr.AmountDiscounted).HasColumnType("decimal(18,2)");
+        builder.Property(vr => vr.AmountDiscounted).HasColumnType("numeric(18,2)");
 
         builder.HasOne(vr => vr.Customer)
             .WithMany(c => c.VoucherRedemptions)

@@ -16,6 +16,9 @@ public class AppUser : IdentityUser
     /// <summary>Gets or sets the user's avatar URL.</summary>
     public string? Avatar { get; set; }
 
+    /// <summary>Gets or sets the Cloudinary public ID for the avatar.</summary>
+    public string? CloudinaryPublicId { get; set; }
+
     /// <summary>Gets or sets the user's date of birth.</summary>
     public DateTime? DateOfBirth { get; set; }
 

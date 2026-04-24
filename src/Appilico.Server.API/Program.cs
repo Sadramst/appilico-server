@@ -1,5 +1,6 @@
 using System.Text;
 using AspNetCoreRateLimit;
+using CloudinaryDotNet;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +21,9 @@ using Appilico.Server.Domain.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Enable Npgsql legacy timestamp behavior (allow DateTime with Unspecified kind)
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 // Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -32,7 +36,7 @@ builder.Host.UseSerilog();
 
 // DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Identity
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
@@ -92,6 +96,15 @@ builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+
+// Cloudinary
+var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
+var cloudinaryAccount = new Account(
+    cloudinaryConfig["CloudName"],
+    cloudinaryConfig["ApiKey"],
+    cloudinaryConfig["ApiSecret"]);
+builder.Services.AddSingleton(new Cloudinary(cloudinaryAccount));
+builder.Services.AddScoped<IImageService, CloudinaryImageService>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));

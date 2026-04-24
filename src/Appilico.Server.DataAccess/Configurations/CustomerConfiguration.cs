@@ -15,7 +15,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasKey(c => c.Id);
         builder.Property(c => c.CustomerCode).HasMaxLength(20).IsRequired();
         builder.HasIndex(c => c.CustomerCode).IsUnique();
-        builder.Property(c => c.TotalPurchases).HasColumnType("decimal(18,2)");
+        builder.Property(c => c.TotalPurchases).HasColumnType("numeric(18,2)");
 
         builder.HasMany(c => c.Addresses)
             .WithOne(a => a.Customer)

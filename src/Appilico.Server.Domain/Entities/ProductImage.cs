@@ -13,6 +13,9 @@ public class ProductImage : BaseAuditableEntity
     /// <summary>Gets or sets the image URL.</summary>
     public string ImageUrl { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the Cloudinary public ID.</summary>
+    public string? CloudinaryPublicId { get; set; }
+
     /// <summary>Gets or sets the alt text for the image.</summary>
     public string? AltText { get; set; }
 

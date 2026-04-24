@@ -15,7 +15,7 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
         builder.HasKey(v => v.Id);
         builder.Property(v => v.VariantName).HasMaxLength(200).IsRequired();
         builder.Property(v => v.SKU).HasMaxLength(50).IsRequired();
-        builder.Property(v => v.Price).HasColumnType("decimal(18,2)");
+        builder.Property(v => v.Price).HasColumnType("numeric(18,2)");
         builder.HasQueryFilter(v => !v.IsDeleted);
     }
 }

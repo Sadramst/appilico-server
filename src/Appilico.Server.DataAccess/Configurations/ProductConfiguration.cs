@@ -18,11 +18,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.SKU).HasMaxLength(50).IsRequired();
         builder.HasIndex(p => p.SKU).IsUnique();
         builder.Property(p => p.Barcode).HasMaxLength(50);
-        builder.Property(p => p.BasePrice).HasColumnType("decimal(18,2)");
-        builder.Property(p => p.CostPrice).HasColumnType("decimal(18,2)");
-        builder.Property(p => p.Weight).HasColumnType("decimal(10,2)");
+        builder.Property(p => p.BasePrice).HasColumnType("numeric(18,2)");
+        builder.Property(p => p.CostPrice).HasColumnType("numeric(18,2)");
+        builder.Property(p => p.Weight).HasColumnType("numeric(10,2)");
         builder.Property(p => p.Dimensions).HasMaxLength(100);
-        builder.Property(p => p.AverageRating).HasColumnType("decimal(3,2)");
+        builder.Property(p => p.AverageRating).HasColumnType("numeric(3,2)");
 
         builder.HasOne(p => p.Brand)
             .WithMany(b => b.Products)

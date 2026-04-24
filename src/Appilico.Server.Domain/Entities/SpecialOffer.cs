@@ -17,6 +17,9 @@ public class SpecialOffer : BaseAuditableEntity
     /// <summary>Gets or sets the banner image URL.</summary>
     public string? BannerImageUrl { get; set; }
 
+    /// <summary>Gets or sets the Cloudinary public ID for the banner.</summary>
+    public string? CloudinaryPublicId { get; set; }
+
     /// <summary>Gets or sets the offer type.</summary>
     public OfferType OfferType { get; set; }
 

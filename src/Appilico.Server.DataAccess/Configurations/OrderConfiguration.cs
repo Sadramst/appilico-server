@@ -15,11 +15,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasKey(o => o.Id);
         builder.Property(o => o.OrderNumber).HasMaxLength(20).IsRequired();
         builder.HasIndex(o => o.OrderNumber).IsUnique();
-        builder.Property(o => o.SubTotal).HasColumnType("decimal(18,2)");
-        builder.Property(o => o.DiscountAmount).HasColumnType("decimal(18,2)");
-        builder.Property(o => o.TaxAmount).HasColumnType("decimal(18,2)");
-        builder.Property(o => o.ShippingAmount).HasColumnType("decimal(18,2)");
-        builder.Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
+        builder.Property(o => o.SubTotal).HasColumnType("numeric(18,2)");
+        builder.Property(o => o.DiscountAmount).HasColumnType("numeric(18,2)");
+        builder.Property(o => o.TaxAmount).HasColumnType("numeric(18,2)");
+        builder.Property(o => o.ShippingAmount).HasColumnType("numeric(18,2)");
+        builder.Property(o => o.TotalAmount).HasColumnType("numeric(18,2)");
         builder.Property(o => o.VoucherCode).HasMaxLength(50);
         builder.Property(o => o.Notes).HasMaxLength(1000);
 

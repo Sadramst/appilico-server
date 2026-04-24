@@ -14,9 +14,9 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
     {
         builder.HasKey(oi => oi.Id);
         builder.Property(oi => oi.ProductName).HasMaxLength(300).IsRequired();
-        builder.Property(oi => oi.UnitPrice).HasColumnType("decimal(18,2)");
-        builder.Property(oi => oi.TotalPrice).HasColumnType("decimal(18,2)");
-        builder.Property(oi => oi.Discount).HasColumnType("decimal(18,2)");
+        builder.Property(oi => oi.UnitPrice).HasColumnType("numeric(18,2)");
+        builder.Property(oi => oi.TotalPrice).HasColumnType("numeric(18,2)");
+        builder.Property(oi => oi.Discount).HasColumnType("numeric(18,2)");
 
         builder.HasOne(oi => oi.Product)
             .WithMany()

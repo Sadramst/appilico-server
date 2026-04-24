@@ -16,8 +16,8 @@ public class VoucherConfiguration : IEntityTypeConfiguration<Voucher>
         builder.Property(v => v.Code).HasMaxLength(50).IsRequired();
         builder.HasIndex(v => v.Code).IsUnique();
         builder.Property(v => v.Description).HasMaxLength(1000);
-        builder.Property(v => v.Value).HasColumnType("decimal(18,2)");
-        builder.Property(v => v.MinOrderAmount).HasColumnType("decimal(18,2)");
+        builder.Property(v => v.Value).HasColumnType("numeric(18,2)");
+        builder.Property(v => v.MinOrderAmount).HasColumnType("numeric(18,2)");
 
         builder.HasMany(v => v.Redemptions)
             .WithOne(r => r.Voucher)
