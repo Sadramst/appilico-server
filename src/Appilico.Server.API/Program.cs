@@ -208,6 +208,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "Appilico E-Commerce API",
+    status = "healthy",
+    version = "v1",
+    swagger = "/swagger/index.html",
+    timestamp = DateTime.UtcNow
+}));
+
 // Seed database
 await DatabaseSeeder.SeedAsync(app.Services);
 
