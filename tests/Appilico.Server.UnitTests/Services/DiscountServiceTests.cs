@@ -70,6 +70,105 @@ public class DiscountServiceTests
     }
 
     [Fact]
+    public async Task ValidateAsync_InvalidCode_ReturnsClearMessage()
+    {
+        _discountRepoMock.Setup(r => r.GetByCodeAsync("BADCODE")).ReturnsAsync((Discount?)null);
+
+        var result = await _sut.ValidateAsync(new ValidateDiscountRequest { Code = "BADCODE", OrderAmount = 100m });
+
+        result.Success.Should().BeTrue();
+        result.Data!.IsValid.Should().BeFalse();
+        result.Data.Message.Should().Be("Invalid discount code");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_InactiveDiscount_ReturnsClearMessage()
+    {
+        _discountRepoMock.Setup(r => r.GetByCodeAsync("OFF10")).ReturnsAsync(new Discount
+        {
+            Id = Guid.NewGuid(),
+            Code = "OFF10",
+            Name = "Off",
+            DiscountType = DiscountType.Fixed,
+            Value = 10m,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(1),
+            IsActive = false,
+            CreatedBy = "test"
+        });
+
+        var result = await _sut.ValidateAsync(new ValidateDiscountRequest { Code = "OFF10", OrderAmount = 100m });
+
+        result.Data!.Message.Should().Be("Discount code is inactive");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_ExpiredDiscount_ReturnsClearMessage()
+    {
+        _discountRepoMock.Setup(r => r.GetByCodeAsync("OLD10")).ReturnsAsync(new Discount
+        {
+            Id = Guid.NewGuid(),
+            Code = "OLD10",
+            Name = "Old",
+            DiscountType = DiscountType.Fixed,
+            Value = 10m,
+            StartDate = DateTime.UtcNow.AddDays(-10),
+            EndDate = DateTime.UtcNow.AddDays(-1),
+            IsActive = true,
+            CreatedBy = "test"
+        });
+
+        var result = await _sut.ValidateAsync(new ValidateDiscountRequest { Code = "OLD10", OrderAmount = 100m });
+
+        result.Data!.Message.Should().Be("Discount code has expired");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_MinimumOrderNotMet_ReturnsClearMessage()
+    {
+        _discountRepoMock.Setup(r => r.GetByCodeAsync("MIN50")).ReturnsAsync(new Discount
+        {
+            Id = Guid.NewGuid(),
+            Code = "MIN50",
+            Name = "Min order",
+            DiscountType = DiscountType.Fixed,
+            Value = 10m,
+            MinOrderAmount = 50m,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(1),
+            IsActive = true,
+            CreatedBy = "test"
+        });
+
+        var result = await _sut.ValidateAsync(new ValidateDiscountRequest { Code = "MIN50", OrderAmount = 20m });
+
+        result.Data!.Message.Should().Contain("Minimum order amount not met");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_MaxRedemptionsReached_ReturnsClearMessage()
+    {
+        _discountRepoMock.Setup(r => r.GetByCodeAsync("MAXED")).ReturnsAsync(new Discount
+        {
+            Id = Guid.NewGuid(),
+            Code = "MAXED",
+            Name = "Maxed",
+            DiscountType = DiscountType.Fixed,
+            Value = 10m,
+            UsageLimit = 5,
+            UsedCount = 5,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(1),
+            IsActive = true,
+            CreatedBy = "test"
+        });
+
+        var result = await _sut.ValidateAsync(new ValidateDiscountRequest { Code = "MAXED", OrderAmount = 100m });
+
+        result.Data!.Message.Should().Be("Discount code has reached its maximum number of redemptions");
+    }
+
+    [Fact]
     public async Task CreateAsync_ValidRequest_ReturnsSuccess()
     {
         var request = new CreateDiscountRequest

@@ -5,11 +5,13 @@ using System.Text;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Appilico.Server.Business.DTOs.Auth;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.Interfaces;
+using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Constants;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Interfaces;
@@ -24,6 +26,7 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly AppDbContext _dbContext;
 
     /// <summary>Initializes a new instance of AuthService.</summary>
     public AuthService(
@@ -31,13 +34,15 @@ public class AuthService : IAuthService
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IConfiguration configuration,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        AppDbContext dbContext)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _configuration = configuration;
         _logger = logger;
+        _dbContext = dbContext;
     }
 
     /// <inheritdoc/>
@@ -47,37 +52,55 @@ public class AuthService : IAuthService
         if (existingUser != null)
             return ApiResponse<AuthResponse>.FailResponse("A user with this email already exists");
 
-        var user = new AppUser
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            UserName = request.Email,
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            PhoneNumber = request.PhoneNumber
-        };
+            var user = new AppUser
+            {
+                UserName = request.Email.Trim(),
+                Email = request.Email.Trim(),
+                FirstName = request.FirstName.Trim(),
+                LastName = request.LastName.Trim(),
+                PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim()
+            };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
-        if (!result.Succeeded)
-            return ApiResponse<AuthResponse>.FailResponse("Registration failed", result.Errors.Select(e => e.Description).ToList());
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                return ApiResponse<AuthResponse>.FailResponse("Registration failed", result.Errors.Select(e => e.Description).ToList());
+            }
 
-        await _userManager.AddToRoleAsync(user, AppConstants.Roles.Customer);
+            var roleResult = await _userManager.AddToRoleAsync(user, AppConstants.Roles.Customer);
+            if (!roleResult.Succeeded)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                return ApiResponse<AuthResponse>.FailResponse("Registration failed", roleResult.Errors.Select(e => e.Description).ToList());
+            }
 
-        // Create customer profile
-        var customer = new Customer
+            var customer = new Customer
+            {
+                UserId = user.Id,
+                CustomerCode = $"CUST-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}",
+                JoinDate = DateTime.UtcNow,
+                CreatedBy = user.Id
+            };
+
+            await _unitOfWork.Customers.AddAsync(customer);
+            await _unitOfWork.SaveChangesAsync();
+
+            var authResponse = await GenerateAuthResponseAsync(user);
+            await _unitOfWork.CommitTransactionAsync();
+
+            _logger.LogInformation("User {UserId} registered successfully", user.Id);
+            return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Registration successful");
+        }
+        catch (Exception ex)
         {
-            UserId = user.Id,
-            CustomerCode = $"CUST-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}",
-            JoinDate = DateTime.UtcNow,
-            CreatedBy = user.Id
-        };
-
-        await _unitOfWork.Customers.AddAsync(customer);
-        await _unitOfWork.SaveChangesAsync();
-
-        var authResponse = await GenerateAuthResponseAsync(user);
-        _logger.LogInformation("User {UserId} registered successfully", user.Id);
-
-        return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Registration successful");
+            await _unitOfWork.RollbackTransactionAsync();
+            _logger.LogError(ex, "Registration failed for email {Email}", request.Email);
+            return ApiResponse<AuthResponse>.FailResponse("Registration failed. Please try again.");
+        }
     }
 
     /// <inheritdoc/>
@@ -90,10 +113,17 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return ApiResponse<AuthResponse>.FailResponse("Account is deactivated");
 
-        var authResponse = await GenerateAuthResponseAsync(user);
-        _logger.LogInformation("User {UserId} logged in", user.Id);
-
-        return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Login successful");
+        try
+        {
+            var authResponse = await GenerateAuthResponseAsync(user);
+            _logger.LogInformation("User {UserId} logged in", user.Id);
+            return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Login successful");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Login failed while generating tokens for user {UserId}", user.Id);
+            return ApiResponse<AuthResponse>.FailResponse("Login failed. Please try again.");
+        }
     }
 
     /// <inheritdoc/>
@@ -107,13 +137,19 @@ public class AuthService : IAuthService
         if (user == null)
             return ApiResponse<AuthResponse>.FailResponse("User not found");
 
-        // Revoke old token
-        storedToken.RevokedAt = DateTime.UtcNow;
+        try
+        {
+            storedToken.RevokedAt = DateTime.UtcNow;
+            await _unitOfWork.SaveChangesAsync();
 
-        await _unitOfWork.SaveChangesAsync();
-
-        var authResponse = await GenerateAuthResponseAsync(user);
-        return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Token refreshed successfully");
+            var authResponse = await GenerateAuthResponseAsync(user);
+            return ApiResponse<AuthResponse>.SuccessResponse(authResponse, "Token refreshed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh token flow failed for user {UserId}", storedToken.UserId);
+            return ApiResponse<AuthResponse>.FailResponse("Token refresh failed. Please log in again.");
+        }
     }
 
     /// <inheritdoc/>
@@ -210,8 +246,11 @@ public class AuthService : IAuthService
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["JWT:Secret"] ?? throw new InvalidOperationException("JWT:Secret not configured")));
+        var jwtSecret = _configuration["JWT:Secret"];
+        if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret == "will-be-overridden-by-user-secrets")
+            throw new InvalidOperationException("JWT signing secret is not configured");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var expirationMinutes = int.Parse(_configuration["JWT:ExpirationInMinutes"] ?? "60");
@@ -226,7 +265,6 @@ public class AuthService : IAuthService
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-        // Generate refresh token
         var refreshTokenValue = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var refreshTokenDays = int.Parse(_configuration["JWT:RefreshTokenExpirationInDays"] ?? "7");
 
@@ -238,8 +276,7 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        // Store refresh token in DB via DbContext directly
-        // We'll need to handle this through the context
+        _dbContext.RefreshTokens.Add(refreshToken);
         await _unitOfWork.SaveChangesAsync();
 
         return new AuthResponse
@@ -261,9 +298,7 @@ public class AuthService : IAuthService
 
     private async Task<RefreshToken?> FindRefreshTokenAsync(string token)
     {
-        // This will be resolved when we have access to the DbContext for RefreshToken queries
-        // For now, return null - will be implemented in the API layer with DbContext injection
-        await Task.CompletedTask;
-        return null;
+        return await _dbContext.RefreshTokens
+            .FirstOrDefaultAsync(rt => rt.Token == token);
     }
 }

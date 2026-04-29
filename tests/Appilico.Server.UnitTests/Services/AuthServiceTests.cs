@@ -3,9 +3,11 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Appilico.Server.Business.DTOs.Auth;
 using Appilico.Server.Business.Services;
+using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Interfaces;
 using Appilico.Server.UnitTests.Helpers;
@@ -20,6 +22,7 @@ public class AuthServiceTests
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
     private readonly Mock<ILogger<AuthService>> _loggerMock;
+    private readonly AppDbContext _dbContext;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -31,7 +34,16 @@ public class AuthServiceTests
         _mapper = TestMapperConfig.CreateMapper();
         _loggerMock = new Mock<ILogger<AuthService>>();
 
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        _dbContext = new AppDbContext(options);
+
         _unitOfWorkMock.Setup(u => u.Customers).Returns(_customerRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).Returns(() => _dbContext.SaveChangesAsync());
 
         var configValues = new Dictionary<string, string?>
         {
@@ -43,7 +55,7 @@ public class AuthServiceTests
         };
         _configuration = new ConfigurationBuilder().AddInMemoryCollection(configValues).Build();
 
-        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object);
+        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object, _dbContext);
     }
 
     // ──────── RegisterAsync ────────
@@ -58,15 +70,14 @@ public class AuthServiceTests
             .ReturnsAsync(IdentityResult.Success);
         _userManagerMock.Setup(m => m.GetRolesAsync(It.IsAny<AppUser>()))
             .ReturnsAsync(new List<string> { "Customer" });
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
-
         var request = new RegisterRequest
         {
             FirstName = "John",
             LastName = "Doe",
             Email = "newuser@test.com",
             Password = "Password123!",
-            ConfirmPassword = "Password123!"
+            ConfirmPassword = "Password123!",
+            PhoneNumber = "09123456789"
         };
 
         var result = await _sut.RegisterAsync(request);
@@ -74,6 +85,7 @@ public class AuthServiceTests
         result.Success.Should().BeTrue();
         result.Data!.AccessToken.Should().NotBeNullOrEmpty();
         result.Data.User.Email.Should().Be("newuser@test.com");
+        result.Data.RefreshToken.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -118,6 +130,30 @@ public class AuthServiceTests
         result.Success.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task RegisterAsync_RoleAssignmentFails_ReturnsFail()
+    {
+        _userManagerMock.Setup(m => m.FindByEmailAsync("newuser@test.com")).ReturnsAsync((AppUser?)null);
+        _userManagerMock.Setup(m => m.CreateAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _userManagerMock.Setup(m => m.AddToRoleAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Customer role does not exist" }));
+
+        var request = new RegisterRequest
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "newuser@test.com",
+            Password = "Password123!",
+            ConfirmPassword = "Password123!"
+        };
+
+        var result = await _sut.RegisterAsync(request);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("Customer role"));
+    }
+
     // ──────── LoginAsync ────────
 
     [Fact]
@@ -127,8 +163,6 @@ public class AuthServiceTests
         _userManagerMock.Setup(m => m.FindByEmailAsync("john@test.com")).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.CheckPasswordAsync(user, "Password123!")).ReturnsAsync(true);
         _userManagerMock.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new List<string> { "Customer" });
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
-
         var request = new LoginRequest { Email = "john@test.com", Password = "Password123!" };
 
         var result = await _sut.LoginAsync(request);
@@ -183,9 +217,8 @@ public class AuthServiceTests
     // ──────── RefreshTokenAsync ────────
 
     [Fact]
-    public async Task RefreshTokenAsync_StubAlwaysFails()
+    public async Task RefreshTokenAsync_InvalidToken_ReturnsFail()
     {
-        // FindRefreshTokenAsync is a stub that always returns null
         var request = new RefreshTokenRequest { RefreshToken = "some-token" };
 
         var result = await _sut.RefreshTokenAsync(request);
@@ -193,15 +226,60 @@ public class AuthServiceTests
         result.Success.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task RefreshTokenAsync_ValidToken_ReturnsSuccess()
+    {
+        var user = CreateTestUser();
+        var storedToken = new RefreshToken
+        {
+            Token = "refresh-token",
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = user.Id
+        };
+        _dbContext.RefreshTokens.Add(storedToken);
+        await _dbContext.SaveChangesAsync();
+
+        _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
+        _userManagerMock.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new List<string> { "Customer" });
+
+        var request = new RefreshTokenRequest { RefreshToken = "refresh-token" };
+
+        var result = await _sut.RefreshTokenAsync(request);
+
+        result.Success.Should().BeTrue();
+        result.Data!.RefreshToken.Should().NotBeNullOrWhiteSpace();
+    }
+
     // ──────── RevokeTokenAsync ────────
 
     [Fact]
-    public async Task RevokeTokenAsync_StubAlwaysFails()
+    public async Task RevokeTokenAsync_UnknownToken_ReturnsFail()
     {
-        // FindRefreshTokenAsync is a stub that always returns null
         var result = await _sut.RevokeTokenAsync("some-token", "user-id");
 
         result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RevokeTokenAsync_ExistingToken_ReturnsSuccess()
+    {
+        var token = new RefreshToken
+        {
+            Token = "revoke-me",
+            UserId = "user-id",
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = "user-id"
+        };
+        _dbContext.RefreshTokens.Add(token);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.RevokeTokenAsync("revoke-me", "user-id");
+
+        result.Success.Should().BeTrue();
+        _dbContext.RefreshTokens.Single(rt => rt.Token == "revoke-me").RevokedAt.Should().NotBeNull();
     }
 
     // ──────── GetProfileAsync ────────

@@ -100,29 +100,41 @@ public class DiscountService : IDiscountService
     public async Task<ApiResponse<DiscountValidationResult>> ValidateAsync(ValidateDiscountRequest request)
     {
         var discount = await _unitOfWork.Discounts.GetByCodeAsync(request.Code);
-        if (discount == null || !discount.IsActive)
+        if (discount == null)
             return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
             {
                 IsValid = false, Message = "Invalid discount code"
             });
 
-        var now = DateTime.UtcNow;
-        if (now < discount.StartDate || now > discount.EndDate)
+        if (!discount.IsActive)
             return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
             {
-                IsValid = false, Message = "Discount is not currently active"
+                IsValid = false, Message = "Discount code is inactive"
+            });
+
+        var now = DateTime.UtcNow;
+        if (now < discount.StartDate)
+            return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
+            {
+                IsValid = false, Message = "Discount code is not active yet"
+            });
+
+        if (now > discount.EndDate)
+            return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
+            {
+                IsValid = false, Message = "Discount code has expired"
             });
 
         if (discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value)
             return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
             {
-                IsValid = false, Message = "Discount usage limit reached"
+                IsValid = false, Message = "Discount code has reached its maximum number of redemptions"
             });
 
         if (discount.MinOrderAmount.HasValue && request.OrderAmount < discount.MinOrderAmount.Value)
             return ApiResponse<DiscountValidationResult>.SuccessResponse(new DiscountValidationResult
             {
-                IsValid = false, Message = $"Minimum order amount is {discount.MinOrderAmount.Value:C}"
+                IsValid = false, Message = $"Minimum order amount not met. Required: {discount.MinOrderAmount.Value:C}"
             });
 
         decimal discountAmount = discount.DiscountType == DiscountType.Percentage
