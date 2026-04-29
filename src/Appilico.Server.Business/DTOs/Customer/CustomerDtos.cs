@@ -84,6 +84,52 @@ public class UpdateCustomerRequest
     public MembershipTier? MembershipTier { get; set; }
 }
 
+/// <summary>DTO for creating a customer address.</summary>
+public class CreateAddressRequest
+{
+    /// <summary>Gets or sets the title.</summary>
+    public string Title { get; set; } = string.Empty;
+    /// <summary>Gets or sets address line 1.</summary>
+    public string AddressLine1 { get; set; } = string.Empty;
+    /// <summary>Gets or sets address line 2.</summary>
+    public string? AddressLine2 { get; set; }
+    /// <summary>Gets or sets the city.</summary>
+    public string City { get; set; } = string.Empty;
+    /// <summary>Gets or sets the state.</summary>
+    public string? State { get; set; }
+    /// <summary>Gets or sets the postal code.</summary>
+    public string PostalCode { get; set; } = string.Empty;
+    /// <summary>Gets or sets the country.</summary>
+    public string Country { get; set; } = string.Empty;
+    /// <summary>Gets or sets whether this is default.</summary>
+    public bool IsDefault { get; set; }
+    /// <summary>Gets or sets the address type.</summary>
+    public AddressType AddressType { get; set; }
+}
+
+/// <summary>DTO for updating a customer address.</summary>
+public class UpdateAddressRequest
+{
+    /// <summary>Gets or sets the title.</summary>
+    public string Title { get; set; } = string.Empty;
+    /// <summary>Gets or sets address line 1.</summary>
+    public string AddressLine1 { get; set; } = string.Empty;
+    /// <summary>Gets or sets address line 2.</summary>
+    public string? AddressLine2 { get; set; }
+    /// <summary>Gets or sets the city.</summary>
+    public string City { get; set; } = string.Empty;
+    /// <summary>Gets or sets the state.</summary>
+    public string? State { get; set; }
+    /// <summary>Gets or sets the postal code.</summary>
+    public string PostalCode { get; set; } = string.Empty;
+    /// <summary>Gets or sets the country.</summary>
+    public string Country { get; set; } = string.Empty;
+    /// <summary>Gets or sets whether this is default.</summary>
+    public bool IsDefault { get; set; }
+    /// <summary>Gets or sets the address type.</summary>
+    public AddressType AddressType { get; set; }
+}
+
 /// <summary>DTO for customer loyalty info.</summary>
 public class CustomerLoyaltyDto
 {

@@ -67,4 +67,36 @@ public class CustomersController : BaseApiController
         var result = await _customerService.AddLoyaltyPointsAsync(id, points);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    /// <summary>Get my addresses.</summary>
+    [HttpGet("me/addresses")]
+    public async Task<IActionResult> GetMyAddresses()
+    {
+        var result = await _customerService.GetAddressesAsync(GetUserId());
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>Create a new address.</summary>
+    [HttpPost("me/addresses")]
+    public async Task<IActionResult> CreateAddress([FromBody] CreateAddressRequest request)
+    {
+        var result = await _customerService.CreateAddressAsync(GetUserId(), request);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>Update an address.</summary>
+    [HttpPut("me/addresses/{addressId:guid}")]
+    public async Task<IActionResult> UpdateAddress(Guid addressId, [FromBody] UpdateAddressRequest request)
+    {
+        var result = await _customerService.UpdateAddressAsync(GetUserId(), addressId, request);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>Delete an address.</summary>
+    [HttpDelete("me/addresses/{addressId:guid}")]
+    public async Task<IActionResult> DeleteAddress(Guid addressId)
+    {
+        var result = await _customerService.DeleteAddressAsync(GetUserId(), addressId);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
 }

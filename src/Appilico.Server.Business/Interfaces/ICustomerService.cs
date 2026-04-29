@@ -23,4 +23,16 @@ public interface ICustomerService
 
     /// <summary>Adds loyalty points.</summary>
     Task<ApiResponse<CustomerLoyaltyDto>> AddLoyaltyPointsAsync(Guid customerId, int points);
+
+    /// <summary>Gets addresses for a customer by user ID.</summary>
+    Task<ApiResponse<List<CustomerAddressDto>>> GetAddressesAsync(string userId);
+
+    /// <summary>Creates a new address for a customer.</summary>
+    Task<ApiResponse<CustomerAddressDto>> CreateAddressAsync(string userId, CreateAddressRequest request);
+
+    /// <summary>Updates an existing address.</summary>
+    Task<ApiResponse<CustomerAddressDto>> UpdateAddressAsync(string userId, Guid addressId, UpdateAddressRequest request);
+
+    /// <summary>Deletes an address.</summary>
+    Task<ApiResponse<bool>> DeleteAddressAsync(string userId, Guid addressId);
 }

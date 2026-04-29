@@ -548,7 +548,7 @@ public class LiveApiTests
     }
 
     // ═══════════════════════════════════════════════════
-    //  CUSTOMERS  (6 tests)
+    //  CUSTOMERS  (10 tests)
     // ═══════════════════════════════════════════════════
 
     [Fact]
@@ -605,6 +605,74 @@ public class LiveApiTests
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var data = await Data(resp);
         data.GetProperty("loyaltyPoints").GetInt32().Should().BeGreaterOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task Customers_GetMyAddresses_ReturnsAddresses()
+    {
+        var resp = await GetAuth("/api/customers/me/addresses", _customerToken);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var data = await Data(resp);
+        data.GetArrayLength().Should().BeGreaterThan(0);
+        data[0].GetProperty("title").GetString().Should().NotBeNullOrEmpty();
+        data[0].GetProperty("city").GetString().Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Customers_CreateUpdateDeleteAddress_FullFlow()
+    {
+        // Create
+        var createResp = await PostAuth("/api/customers/me/addresses", new
+        {
+            title = "Test Office",
+            addressLine1 = "999 Test Street",
+            city = "Sydney",
+            state = "NSW",
+            postalCode = "2000",
+            country = "Australia",
+            isDefault = false,
+            addressType = 1
+        }, _customerToken);
+        createResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var created = await Data(createResp);
+        var addrId = created.GetProperty("id").GetString();
+        created.GetProperty("title").GetString().Should().Be("Test Office");
+        created.GetProperty("city").GetString().Should().Be("Sydney");
+
+        // Update
+        var updateResp = await PutAuth($"/api/customers/me/addresses/{addrId}", new
+        {
+            title = "Updated Office",
+            addressLine1 = "999 Test Street",
+            city = "Brisbane",
+            state = "QLD",
+            postalCode = "4000",
+            country = "Australia",
+            isDefault = false,
+            addressType = 1
+        }, _customerToken);
+        updateResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updated = await Data(updateResp);
+        updated.GetProperty("title").GetString().Should().Be("Updated Office");
+        updated.GetProperty("city").GetString().Should().Be("Brisbane");
+
+        // Delete
+        var deleteResp = await DeleteAuth($"/api/customers/me/addresses/{addrId}", _customerToken);
+        deleteResp.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Customers_GetAddresses_WithoutAuth_ReturnsUnauthorized()
+    {
+        var resp = await _client.GetAsync("/api/customers/me/addresses");
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Customers_DeleteAddress_InvalidId_ReturnsNotFound()
+    {
+        var resp = await DeleteAuth($"/api/customers/me/addresses/{Guid.NewGuid()}", _customerToken);
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     // ═══════════════════════════════════════════════════

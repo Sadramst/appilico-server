@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.DTOs.Customer;
 using Appilico.Server.Business.Interfaces;
+using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.Business.Services;
@@ -119,5 +120,107 @@ public class CustomerService : ICustomerService
             MembershipTier = customer.MembershipTier,
             TotalPurchases = customer.TotalPurchases
         });
+    }
+
+    /// <inheritdoc/>
+    public async Task<ApiResponse<List<CustomerAddressDto>>> GetAddressesAsync(string userId)
+    {
+        var customer = await _unitOfWork.Customers.GetByUserIdAsync(userId);
+        if (customer == null)
+            return ApiResponse<List<CustomerAddressDto>>.FailResponse("Customer not found");
+
+        var dtos = _mapper.Map<List<CustomerAddressDto>>(customer.Addresses);
+        return ApiResponse<List<CustomerAddressDto>>.SuccessResponse(dtos);
+    }
+
+    /// <inheritdoc/>
+    public async Task<ApiResponse<CustomerAddressDto>> CreateAddressAsync(string userId, CreateAddressRequest request)
+    {
+        var customer = await _unitOfWork.Customers.GetByUserIdAsync(userId);
+        if (customer == null)
+            return ApiResponse<CustomerAddressDto>.FailResponse("Customer not found");
+
+        var address = new CustomerAddress
+        {
+            CustomerId = customer.Id,
+            Title = request.Title,
+            AddressLine1 = request.AddressLine1,
+            AddressLine2 = request.AddressLine2,
+            City = request.City,
+            State = request.State,
+            PostalCode = request.PostalCode,
+            Country = request.Country,
+            IsDefault = request.IsDefault,
+            AddressType = request.AddressType,
+            CreatedBy = userId
+        };
+
+        // If this is set as default, clear other defaults of same type
+        if (request.IsDefault)
+        {
+            foreach (var existing in customer.Addresses.Where(a => a.AddressType == request.AddressType && a.IsDefault))
+                existing.IsDefault = false;
+        }
+
+        customer.Addresses.Add(address);
+        _unitOfWork.Customers.Update(customer);
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Address created for customer {CustomerId}", customer.Id);
+        return ApiResponse<CustomerAddressDto>.SuccessResponse(_mapper.Map<CustomerAddressDto>(address), "Address created successfully");
+    }
+
+    /// <inheritdoc/>
+    public async Task<ApiResponse<CustomerAddressDto>> UpdateAddressAsync(string userId, Guid addressId, UpdateAddressRequest request)
+    {
+        var customer = await _unitOfWork.Customers.GetByUserIdAsync(userId);
+        if (customer == null)
+            return ApiResponse<CustomerAddressDto>.FailResponse("Customer not found");
+
+        var address = customer.Addresses.FirstOrDefault(a => a.Id == addressId);
+        if (address == null)
+            return ApiResponse<CustomerAddressDto>.FailResponse("Address not found");
+
+        address.Title = request.Title;
+        address.AddressLine1 = request.AddressLine1;
+        address.AddressLine2 = request.AddressLine2;
+        address.City = request.City;
+        address.State = request.State;
+        address.PostalCode = request.PostalCode;
+        address.Country = request.Country;
+        address.IsDefault = request.IsDefault;
+        address.AddressType = request.AddressType;
+        address.UpdatedBy = userId;
+
+        if (request.IsDefault)
+        {
+            foreach (var existing in customer.Addresses.Where(a => a.Id != addressId && a.AddressType == request.AddressType && a.IsDefault))
+                existing.IsDefault = false;
+        }
+
+        _unitOfWork.Customers.Update(customer);
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Address {AddressId} updated for customer {CustomerId}", addressId, customer.Id);
+        return ApiResponse<CustomerAddressDto>.SuccessResponse(_mapper.Map<CustomerAddressDto>(address), "Address updated successfully");
+    }
+
+    /// <inheritdoc/>
+    public async Task<ApiResponse<bool>> DeleteAddressAsync(string userId, Guid addressId)
+    {
+        var customer = await _unitOfWork.Customers.GetByUserIdAsync(userId);
+        if (customer == null)
+            return ApiResponse<bool>.FailResponse("Customer not found");
+
+        var address = customer.Addresses.FirstOrDefault(a => a.Id == addressId);
+        if (address == null)
+            return ApiResponse<bool>.FailResponse("Address not found");
+
+        customer.Addresses.Remove(address);
+        _unitOfWork.Customers.Update(customer);
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Address {AddressId} deleted for customer {CustomerId}", addressId, customer.Id);
+        return ApiResponse<bool>.SuccessResponse(true, "Address deleted successfully");
     }
 }
