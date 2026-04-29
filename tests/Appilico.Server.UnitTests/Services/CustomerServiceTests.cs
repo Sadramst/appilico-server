@@ -226,6 +226,101 @@ public class CustomerServiceTests
         result.Success.Should().BeFalse();
     }
 
+    // ──────── UpdateAddressAsync ────────
+
+    [Fact]
+    public async Task UpdateAddressAsync_ExistingAddress_ReturnsSuccess()
+    {
+        var userId = "user-123";
+        var addressId = Guid.NewGuid();
+        var customer = CreateTestCustomer(userId: userId);
+        customer.Addresses = new List<CustomerAddress>
+        {
+            new() { Id = addressId, Title = "Home", AddressLine1 = "123 St", City = "Springfield", Country = "US", PostalCode = "12345", AddressType = AddressType.Shipping, CreatedBy = "test" }
+        };
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync(userId)).ReturnsAsync(customer);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        var request = new UpdateAddressRequest
+        {
+            Title = "Work", AddressLine1 = "456 Oak Ave", City = "Portland",
+            PostalCode = "97201", Country = "US", AddressType = AddressType.Billing, IsDefault = false
+        };
+        var result = await _sut.UpdateAddressAsync(userId, addressId, request);
+
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateAddressAsync_NonExistingCustomer_ReturnsFail()
+    {
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync("nope")).ReturnsAsync((Customer?)null);
+
+        var request = new UpdateAddressRequest { Title = "Home", AddressLine1 = "123 St", City = "City", PostalCode = "12345", Country = "US", AddressType = AddressType.Shipping };
+        var result = await _sut.UpdateAddressAsync("nope", Guid.NewGuid(), request);
+
+        result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateAddressAsync_AddressNotFound_ReturnsFail()
+    {
+        var userId = "user-123";
+        var customer = CreateTestCustomer(userId: userId);
+        customer.Addresses = new List<CustomerAddress>();
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync(userId)).ReturnsAsync(customer);
+
+        var request = new UpdateAddressRequest { Title = "Home", AddressLine1 = "123 St", City = "City", PostalCode = "12345", Country = "US", AddressType = AddressType.Shipping };
+        var result = await _sut.UpdateAddressAsync(userId, Guid.NewGuid(), request);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("Address not found");
+    }
+
+    // ──────── DeleteAddressAsync ────────
+
+    [Fact]
+    public async Task DeleteAddressAsync_ExistingAddress_ReturnsSuccess()
+    {
+        var userId = "user-123";
+        var addressId = Guid.NewGuid();
+        var customer = CreateTestCustomer(userId: userId);
+        customer.Addresses = new List<CustomerAddress>
+        {
+            new() { Id = addressId, Title = "Home", AddressLine1 = "123 St", City = "Springfield", Country = "US", PostalCode = "12345", AddressType = AddressType.Shipping, CreatedBy = "test" }
+        };
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync(userId)).ReturnsAsync(customer);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        var result = await _sut.DeleteAddressAsync(userId, addressId);
+
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteAddressAsync_NonExistingCustomer_ReturnsFail()
+    {
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync("nope")).ReturnsAsync((Customer?)null);
+
+        var result = await _sut.DeleteAddressAsync("nope", Guid.NewGuid());
+
+        result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteAddressAsync_AddressNotFound_ReturnsFail()
+    {
+        var userId = "user-123";
+        var customer = CreateTestCustomer(userId: userId);
+        customer.Addresses = new List<CustomerAddress>();
+        _customerRepoMock.Setup(r => r.GetByUserIdAsync(userId)).ReturnsAsync(customer);
+
+        var result = await _sut.DeleteAddressAsync(userId, Guid.NewGuid());
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("Address not found");
+    }
+
     private static Customer CreateTestCustomer(string? userId = null)
     {
         return new Customer

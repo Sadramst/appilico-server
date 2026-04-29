@@ -259,6 +259,32 @@ public class VoucherServiceTests
         result.Success.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task DeleteAsync_NonExistingVoucher_ReturnsFail()
+    {
+        _voucherRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Voucher?)null);
+
+        var result = await _sut.DeleteAsync(Guid.NewGuid(), "admin1");
+
+        result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RedeemAsync_ExpiredButActiveVoucher_StillRedeems()
+    {
+        var voucher = CreateTestVoucher("EXPIRED-REDEEM",
+            startDate: DateTime.UtcNow.AddDays(-60),
+            expiryDate: DateTime.UtcNow.AddDays(-1));
+        _voucherRepoMock.Setup(r => r.GetByCodeAsync("EXPIRED-REDEEM")).ReturnsAsync(voucher);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        var request = new RedeemVoucherRequest { Code = "EXPIRED-REDEEM", OrderId = Guid.NewGuid() };
+        var result = await _sut.RedeemAsync(request, Guid.NewGuid());
+
+        // Redeem only checks IsActive, not expiry dates
+        result.Success.Should().BeTrue();
+    }
+
     private static Voucher CreateTestVoucher(string code, bool isActive = true,
         DateTime? startDate = null, DateTime? expiryDate = null,
         decimal? minOrderAmount = null, int? maxRedemptions = null, int currentRedemptions = 0)

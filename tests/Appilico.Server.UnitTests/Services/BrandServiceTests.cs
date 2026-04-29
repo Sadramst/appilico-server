@@ -83,4 +83,61 @@ public class BrandServiceTests
         result.Success.Should().BeTrue();
         result.Data.Should().HaveCount(2);
     }
+
+    [Fact]
+    public async Task GetAllAsync_EmptyList_ReturnsEmptyList()
+    {
+        _brandRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Brand>());
+
+        var result = await _sut.GetAllAsync();
+
+        result.Success.Should().BeTrue();
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NonExistingBrand_ReturnsFail()
+    {
+        _brandRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Brand?)null);
+
+        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("Brand not found");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ExistingBrand_ReturnsSuccess()
+    {
+        var brandId = Guid.NewGuid();
+        var brand = new Brand { Id = brandId, Name = "Old Name", CreatedBy = "test" };
+        _brandRepoMock.Setup(r => r.GetByIdAsync(brandId)).ReturnsAsync(brand);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        var request = new UpdateBrandRequest { Name = "Updated Name", Description = "Updated desc" };
+        var result = await _sut.UpdateAsync(brandId, request, "user1");
+
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NonExistingBrand_ReturnsFail()
+    {
+        _brandRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Brand?)null);
+
+        var request = new UpdateBrandRequest { Name = "Updated" };
+        var result = await _sut.UpdateAsync(Guid.NewGuid(), request, "user1");
+
+        result.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NonExistingBrand_ReturnsFail()
+    {
+        _brandRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Brand?)null);
+
+        var result = await _sut.DeleteAsync(Guid.NewGuid(), "user1");
+
+        result.Success.Should().BeFalse();
+    }
 }
