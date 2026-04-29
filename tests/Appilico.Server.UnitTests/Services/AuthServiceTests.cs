@@ -12,6 +12,8 @@ using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Interfaces;
 using Appilico.Server.UnitTests.Helpers;
 
+using Appilico.Server.Business.Interfaces;
+
 namespace Appilico.Server.UnitTests.Services;
 
 public class AuthServiceTests
@@ -23,6 +25,7 @@ public class AuthServiceTests
     private readonly IConfiguration _configuration;
     private readonly Mock<ILogger<AuthService>> _loggerMock;
     private readonly AppDbContext _dbContext;
+    private readonly Mock<IEmailService> _emailServiceMock;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -55,7 +58,8 @@ public class AuthServiceTests
         };
         _configuration = new ConfigurationBuilder().AddInMemoryCollection(configValues).Build();
 
-        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object, _dbContext);
+        _emailServiceMock = new Mock<IEmailService>();
+        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object, _dbContext, _emailServiceMock.Object);
     }
 
     // ──────── RegisterAsync ────────

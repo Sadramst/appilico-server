@@ -27,6 +27,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
     private readonly AppDbContext _dbContext;
+    private readonly IEmailService _emailService;
 
     /// <summary>Initializes a new instance of AuthService.</summary>
     public AuthService(
@@ -35,7 +36,8 @@ public class AuthService : IAuthService
         IMapper mapper,
         IConfiguration configuration,
         ILogger<AuthService> logger,
-        AppDbContext dbContext)
+        AppDbContext dbContext,
+        IEmailService emailService)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
@@ -43,6 +45,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _logger = logger;
         _dbContext = dbContext;
+        _emailService = emailService;
     }
 
     /// <inheritdoc/>
@@ -208,8 +211,15 @@ public class AuthService : IAuthService
             return ApiResponse<bool>.SuccessResponse(true, "If the email exists, a reset link has been sent");
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        // In production, send email with token
-        _logger.LogInformation("Password reset token generated for {Email}: {Token}", request.Email, token);
+
+        try
+        {
+            await _emailService.SendPasswordResetEmailAsync(request.Email, token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send password reset email to {Email}", request.Email);
+        }
 
         return ApiResponse<bool>.SuccessResponse(true, "If the email exists, a reset link has been sent");
     }
