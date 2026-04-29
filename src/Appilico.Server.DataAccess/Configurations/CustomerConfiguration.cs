@@ -13,7 +13,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     public void Configure(EntityTypeBuilder<Customer> builder)
     {
         builder.HasKey(c => c.Id);
-        builder.Property(c => c.CustomerCode).HasMaxLength(20).IsRequired();
+        builder.Property(c => c.CustomerCode).HasMaxLength(30).IsRequired();
         builder.HasIndex(c => c.CustomerCode).IsUnique();
         builder.Property(c => c.TotalPurchases).HasColumnType("numeric(18,2)");
 
