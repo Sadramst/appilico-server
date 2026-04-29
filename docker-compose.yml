@@ -1,40 +1,72 @@
 services:
-  api:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "5000:8080"
+    expose:
+      - "8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=appilicodb;Username=appilico;Password=YourStr0ng!Passw0rd;
-      - JWT__Secret=YourSuperSecretKeyThatIsAtLeast32CharactersLong!
-      - JWT__Issuer=Appilico
-      - JWT__Audience=AppilicoApp
-      - Cloudinary__CloudName=your-cloud-name
-      - Cloudinary__ApiKey=your-api-key
-      - Cloudinary__ApiSecret=your-api-secret
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - JWT__Secret=${JWT_SECRET}
+      - JWT__Issuer=Appilico.Server
+      - JWT__Audience=Appilico.Client
+      - JWT__ExpirationInMinutes=60
+      - JWT__RefreshTokenExpirationInDays=7
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - appilico-net
 
   postgres:
     image: postgres:16-alpine
     environment:
       - POSTGRES_DB=appilicodb
-      - POSTGRES_USER=appilico
-      - POSTGRES_PASSWORD=YourStr0ng!Passw0rd
-    ports:
-      - "5432:5432"
+      - POSTGRES_USER=${POSTGRES_USER:-appilico}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U appilico -d appilicodb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appilico} -d appilicodb"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - appilico-net
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_webroot:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - appilico-net
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    networks:
+      - appilico-net
 
 volumes:
   postgres_data:
+  certbot_webroot:
+  certbot_certs:
+
+networks:
+  appilico-net:
