@@ -37,6 +37,8 @@ public static class DatabaseSeeder
             await SeedOrdersAndPaymentsAsync(context, customers);
             await SeedReviewsAsync(context, customers);
             await SeedSettingsAsync(context);
+            await SeedBlogPostsAsync(context);
+            await SeedVisualsAsync(context);
 
             logger.LogInformation("Database seeding completed successfully");
         }
@@ -904,6 +906,166 @@ public static class DatabaseSeeder
             new() { Key = "Loyalty.PointsRedemptionRate", Value = "100", Group = "Loyalty", Description = "Points needed for $1 discount", CreatedBy = "system" },
         };
         context.AppSettings.AddRange(settings);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedBlogPostsAsync(AppDbContext context)
+    {
+        if (await context.BlogPosts.AnyAsync())
+            return;
+
+        var posts = new[]
+        {
+            new Domain.Entities.BlogPost
+            {
+                Title = "Why Australian Mining Companies Are Moving to Real-Time Analytics in 2026",
+                Slug = "why-australian-mining-companies-are-moving-to-real-time-analytics-in-2026",
+                Excerpt = "Discover how leading Australian mining operations are leveraging real-time data analytics to cut costs, improve safety, and boost productivity in an increasingly competitive global market.",
+                Content = @"<p>Australia's mining sector contributes over $200 billion annually to the national economy, yet many operations still rely on manual reporting processes that are days or even weeks behind reality. In 2026, that's changing fast.</p>
+
+<h2>The Shift to Real-Time</h2>
+<p>Real-time analytics platforms allow site managers to monitor equipment performance, ore grades, and safety metrics as they happen. When a conveyor belt starts showing signs of failure, you know in seconds — not the next morning when the shift report lands on your desk.</p>
+
+<h2>Key Benefits</h2>
+<ul>
+<li><strong>Cost reduction:</strong> Predictive maintenance alone can save 15–25% on equipment costs.</li>
+<li><strong>Safety improvements:</strong> Real-time hazard monitoring reduces incidents by up to 30%.</li>
+<li><strong>Productivity gains:</strong> Optimised scheduling and throughput analysis increase output without additional capital expenditure.</li>
+</ul>
+
+<h2>What's Driving Adoption?</h2>
+<p>Power BI custom visuals tailored to mining operations have made it dramatically easier to visualise complex operational data. Instead of Excel spreadsheets, site managers now work with interactive dashboards showing ore grade waterfalls, equipment heatmaps, and AI-powered natural language query interfaces.</p>
+
+<p>The combination of affordable cloud infrastructure, purpose-built mining analytics tools, and pressure to reduce operating costs has made 2026 a tipping point for the industry.</p>",
+                Category = "Analytics",
+                Author = "Appilico Team",
+                PublishedAt = DateTime.UtcNow.AddDays(-10),
+                ReadTimeMinutes = 5,
+                Tags = "analytics,mining,real-time,Australia,Power BI",
+                IsPublished = true
+            },
+            new Domain.Entities.BlogPost
+            {
+                Title = "Power BI Custom Visuals: What They Are and Why Mining Operations Need Them",
+                Slug = "power-bi-custom-visuals-what-they-are-and-why-mining-operations-need-them",
+                Excerpt = "Standard Power BI charts weren't built for mining. Learn how custom visuals designed specifically for resource extraction give your team the insights they actually need.",
+                Content = @"<p>Power BI ships with dozens of built-in chart types, but when you're trying to visualise the production output of a 24/7 open-cut gold mine, a standard bar chart simply doesn't cut it.</p>
+
+<h2>What Are Custom Visuals?</h2>
+<p>Custom visuals are independently developed visualisation components that can be imported into Power BI Desktop and the Power BI Service. They follow the same data-binding model as native visuals but can implement any rendering logic — from specialised Gantt charts to AI-powered natural language query panels.</p>
+
+<h2>Mining-Specific Visuals That Make a Difference</h2>
+<ul>
+<li><strong>Production Gantt Charts:</strong> Track planned vs actual production schedules across multiple equipment units simultaneously.</li>
+<li><strong>Equipment Heatmaps:</strong> Visualise utilisation rates, downtime patterns, and maintenance windows across your entire fleet.</li>
+<li><strong>Ore Grade Waterfall:</strong> Understand the grade profile from blast to processing plant in a single view.</li>
+<li><strong>Safety KPI Dashboards:</strong> TRIFR, LTIFR, near-miss rates, and compliance metrics in a regulatory-ready format.</li>
+<li><strong>Cost Per Tonne Analysis:</strong> Drill down from site-level to activity-level costs with a single click.</li>
+</ul>
+
+<h2>Return on Investment</h2>
+<p>Mining companies that deploy purpose-built visual analytics typically see ROI within 3–6 months through reduced reporting overhead, faster decision-making, and early identification of production issues.</p>",
+                Category = "Technology",
+                Author = "Appilico Team",
+                PublishedAt = DateTime.UtcNow.AddDays(-20),
+                ReadTimeMinutes = 6,
+                Tags = "Power BI,custom visuals,mining,analytics,dashboards",
+                IsPublished = true
+            },
+            new Domain.Entities.BlogPost
+            {
+                Title = "The Real Cost of Manual Reporting in Mining Operations",
+                Slug = "the-real-cost-of-manual-reporting-in-mining-operations",
+                Excerpt = "Manual spreadsheet reporting doesn't just waste time — it erodes decision-making quality, hides operational risks, and costs mining companies millions every year. Here's the full picture.",
+                Content = @"<p>Ask any mine site manager how long it takes to compile the monthly operational report and you'll hear answers ranging from two days to two weeks. Multiply that across your organisation and the numbers become staggering.</p>
+
+<h2>The Hidden Costs</h2>
+<p>Manual reporting carries costs that rarely appear on the balance sheet:</p>
+<ul>
+<li><strong>Labour cost:</strong> Senior engineers spending 20–30% of their time on data collection and formatting rather than analysis.</li>
+<li><strong>Decision lag:</strong> Decisions made on data that's 48–72 hours old in a sector where conditions change hourly.</li>
+<li><strong>Error risk:</strong> A 2023 industry survey found that 67% of mining companies had made at least one significant operational decision based on incorrect data from manual reports in the prior 12 months.</li>
+<li><strong>Compliance exposure:</strong> Regulatory reporting errors can trigger audits and fines running into six figures.</li>
+</ul>
+
+<h2>What Automated Reporting Looks Like in Practice</h2>
+<p>Modern analytics platforms connect directly to your SCADA systems, ERP, and IoT sensor networks. Reports that once took three days to compile are generated automatically overnight — or in real-time for critical KPIs.</p>
+
+<p>The shift isn't just about speed. When your team is no longer buried in spreadsheets, they start asking better questions. That's where the real value lies.</p>
+
+<h2>Making the Business Case</h2>
+<p>The typical return on a mining analytics implementation: $4–12 saved for every $1 invested over a three-year period. If your annual reporting overhead exceeds $500,000, the payback period is usually under 12 months.</p>",
+                Category = "Operations",
+                Author = "Appilico Team",
+                PublishedAt = DateTime.UtcNow.AddDays(-35),
+                ReadTimeMinutes = 7,
+                Tags = "operations,reporting,efficiency,mining,cost reduction",
+                IsPublished = true
+            }
+        };
+
+        context.BlogPosts.AddRange(posts);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedVisualsAsync(AppDbContext context)
+    {
+        if (await context.Visuals.AnyAsync())
+            return;
+
+        var visuals = new[]
+        {
+            new Domain.Entities.Visual
+            {
+                Name = "Production Gantt",
+                Description = "Track planned vs actual production schedules across equipment units with drill-down to shift-level detail.",
+                Category = "Mining",
+                Type = "Gantt",
+                SortOrder = 1
+            },
+            new Domain.Entities.Visual
+            {
+                Name = "Equipment Heatmap",
+                Description = "Visualise fleet utilisation rates, downtime patterns, and maintenance windows across your entire operation.",
+                Category = "Mining",
+                Type = "Heatmap",
+                SortOrder = 2
+            },
+            new Domain.Entities.Visual
+            {
+                Name = "Safety KPI",
+                Description = "TRIFR, LTIFR, near-miss rates, and compliance metrics in a regulatory-ready, drill-through dashboard.",
+                Category = "Mining",
+                Type = "KPI",
+                SortOrder = 3
+            },
+            new Domain.Entities.Visual
+            {
+                Name = "Ore Grade Waterfall",
+                Description = "Understand the complete grade profile from blast to processing plant in a single interactive waterfall view.",
+                Category = "Mining",
+                Type = "Waterfall",
+                SortOrder = 4
+            },
+            new Domain.Entities.Visual
+            {
+                Name = "Cost Per Tonne",
+                Description = "Drill from site-level to activity-level mining costs with one click. Identify cost overruns before they escalate.",
+                Category = "Mining",
+                Type = "Analytics",
+                SortOrder = 5
+            },
+            new Domain.Entities.Visual
+            {
+                Name = "AI NL Query",
+                Description = "Ask questions about your operational data in plain English. Powered by AI, results delivered as charts and tables instantly.",
+                Category = "Mining",
+                Type = "AI",
+                SortOrder = 6
+            }
+        };
+
+        context.Visuals.AddRange(visuals);
         await context.SaveChangesAsync();
     }
 }

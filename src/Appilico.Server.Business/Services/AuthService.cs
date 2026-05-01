@@ -64,7 +64,8 @@ public class AuthService : IAuthService
                 Email = request.Email.Trim(),
                 FirstName = request.FirstName.Trim(),
                 LastName = request.LastName.Trim(),
-                PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim()
+                Company = string.IsNullOrWhiteSpace(request.Company) ? null : request.Company.Trim(),
+                PhoneNumber = string.IsNullOrWhiteSpace(request.Phone ?? request.PhoneNumber) ? null : (request.Phone ?? request.PhoneNumber)!.Trim()
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
@@ -176,8 +177,20 @@ public class AuthService : IAuthService
         if (user == null)
             return ApiResponse<UserDto>.FailResponse("User not found");
 
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Roles = (await _userManager.GetRolesAsync(user)).ToList();
+        var roles = (await _userManager.GetRolesAsync(user)).ToList();
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email!,
+            Company = user.Company,
+            Phone = user.PhoneNumber,
+            Avatar = user.Avatar,
+            Role = roles.FirstOrDefault() ?? string.Empty,
+            Plan = user.SubscriptionPlan,
+            Roles = roles
+        };
 
         return ApiResponse<UserDto>.SuccessResponse(userDto);
     }
@@ -191,16 +204,30 @@ public class AuthService : IAuthService
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
-        if (request.PhoneNumber != null) user.PhoneNumber = request.PhoneNumber;
+        if (request.Company != null) user.Company = request.Company;
+        var phone = request.Phone ?? request.PhoneNumber;
+        if (phone != null) user.PhoneNumber = phone;
         if (request.DateOfBirth.HasValue) user.DateOfBirth = request.DateOfBirth;
 
         await _userManager.UpdateAsync(user);
 
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Roles = (await _userManager.GetRolesAsync(user)).ToList();
+        var roles2 = (await _userManager.GetRolesAsync(user)).ToList();
+        var userDto2 = new UserDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email!,
+            Company = user.Company,
+            Phone = user.PhoneNumber,
+            Avatar = user.Avatar,
+            Role = roles2.FirstOrDefault() ?? string.Empty,
+            Plan = user.SubscriptionPlan,
+            Roles = roles2
+        };
 
         _logger.LogInformation("Profile updated for user {UserId}", userId);
-        return ApiResponse<UserDto>.SuccessResponse(userDto, "Profile updated successfully");
+        return ApiResponse<UserDto>.SuccessResponse(userDto2, "Profile updated successfully");
     }
 
     /// <inheritdoc/>
@@ -300,7 +327,11 @@ public class AuthService : IAuthService
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email!,
+                Company = user.Company,
+                Phone = user.PhoneNumber,
                 Avatar = user.Avatar,
+                Role = roles.FirstOrDefault() ?? string.Empty,
+                Plan = user.SubscriptionPlan,
                 Roles = roles.ToList()
             }
         };

@@ -13,6 +13,12 @@ public class AppUser : IdentityUser
     /// <summary>Gets or sets the user's last name.</summary>
     public string LastName { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the company or organisation name.</summary>
+    public string? Company { get; set; }
+
+    /// <summary>Gets or sets the subscription plan (Starter/Professional/Enterprise).</summary>
+    public string SubscriptionPlan { get; set; } = "Starter";
+
     /// <summary>Gets or sets the user's avatar URL.</summary>
     public string? Avatar { get; set; }
 

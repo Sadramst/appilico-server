@@ -18,12 +18,16 @@ public class RegisterRequest
     public string LastName { get; set; } = string.Empty;
     /// <summary>Gets or sets the email.</summary>
     public string Email { get; set; } = string.Empty;
+    /// <summary>Gets or sets the company or organisation.</summary>
+    public string? Company { get; set; }
+    /// <summary>Gets or sets the phone number.</summary>
+    public string? Phone { get; set; }
+    /// <summary>Gets or sets the phone number (alias).</summary>
+    public string? PhoneNumber { get; set; }
     /// <summary>Gets or sets the password.</summary>
     public string Password { get; set; } = string.Empty;
     /// <summary>Gets or sets the confirm password.</summary>
     public string ConfirmPassword { get; set; } = string.Empty;
-    /// <summary>Gets or sets the phone number.</summary>
-    public string? PhoneNumber { get; set; }
 }
 
 /// <summary>DTO for auth response.</summary>
@@ -50,8 +54,16 @@ public class UserDto
     public string LastName { get; set; } = string.Empty;
     /// <summary>Gets or sets the email.</summary>
     public string Email { get; set; } = string.Empty;
+    /// <summary>Gets or sets the company.</summary>
+    public string? Company { get; set; }
+    /// <summary>Gets or sets the phone number.</summary>
+    public string? Phone { get; set; }
     /// <summary>Gets or sets the avatar.</summary>
     public string? Avatar { get; set; }
+    /// <summary>Gets or sets the primary role.</summary>
+    public string Role { get; set; } = string.Empty;
+    /// <summary>Gets or sets the subscription plan.</summary>
+    public string Plan { get; set; } = "Starter";
     /// <summary>Gets or sets the roles.</summary>
     public List<string> Roles { get; set; } = new();
 }
@@ -95,7 +107,11 @@ public class UpdateProfileRequest
     public string FirstName { get; set; } = string.Empty;
     /// <summary>Gets or sets the last name.</summary>
     public string LastName { get; set; } = string.Empty;
+    /// <summary>Gets or sets the company.</summary>
+    public string? Company { get; set; }
     /// <summary>Gets or sets the phone.</summary>
+    public string? Phone { get; set; }
+    /// <summary>Gets or sets the phone number (alias).</summary>
     public string? PhoneNumber { get; set; }
     /// <summary>Gets or sets the date of birth.</summary>
     public DateTime? DateOfBirth { get; set; }

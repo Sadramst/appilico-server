@@ -98,6 +98,13 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 
+// New public-facing services
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IWaitlistService, WaitlistService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<IVisualService, VisualService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+
 // Cloudinary
 var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
 var cloudinaryAccount = new Account(
@@ -129,8 +136,10 @@ var allowedOrigins = new[]
     "https://appilico-web.vercel.app",
     "https://appilico.com",
     "https://www.appilico.com",
-    "https://appilico.store",    
-    "https://www.appilico.store" 
+    "https://appilico.store",
+    "https://www.appilico.store",
+    "https://appilico.com.au",
+    "https://www.appilico.com.au"
 };
 
 builder.Services.AddCors(options =>

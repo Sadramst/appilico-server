@@ -93,6 +93,18 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     /// <summary>Gets or sets the AuditLogs table.</summary>
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    /// <summary>Gets or sets the BlogPosts table.</summary>
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+
+    /// <summary>Gets or sets the WaitlistEntries table.</summary>
+    public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
+
+    /// <summary>Gets or sets the ContactMessages table.</summary>
+    public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+
+    /// <summary>Gets or sets the Visuals table.</summary>
+    public DbSet<Visual> Visuals => Set<Visual>();
+
     /// <summary>Configures the model using Fluent API.</summary>
     protected override void OnModelCreating(ModelBuilder builder)
     {
