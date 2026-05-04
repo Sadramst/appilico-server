@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Appilico.Server.Business.DTOs.Subscription;
 using Appilico.Server.Business.Interfaces;
 
 namespace Appilico.Server.API.Controllers;
@@ -27,5 +28,33 @@ public class SubscriptionController : BaseApiController
     {
         var result = await _subscriptionService.GetCurrentAsync(GetUserId());
         return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>Upgrade the current user's subscription plan.</summary>
+    [HttpPost("upgrade")]
+    [Authorize]
+    public async Task<IActionResult> Upgrade([FromBody] UpgradeSubscriptionRequest request)
+    {
+        var result = await _subscriptionService.UpgradeAsync(GetUserId(), request);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>Cancel the current user's subscription.</summary>
+    [HttpPost("cancel")]
+    [Authorize]
+    public async Task<IActionResult> Cancel([FromBody] CancelSubscriptionRequest request)
+    {
+        var result = await _subscriptionService.CancelAsync(GetUserId(), request);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>Stripe webhook handler — verifies signature and processes events.</summary>
+    [HttpPost("webhook")]
+    public async Task<IActionResult> StripeWebhook()
+    {
+        var payload = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+        var signature = Request.Headers["Stripe-Signature"].ToString();
+        var result = await _subscriptionService.HandleStripeWebhookAsync(payload, signature);
+        return result.Success ? Ok() : BadRequest();
     }
 }

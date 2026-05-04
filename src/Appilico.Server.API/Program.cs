@@ -3,6 +3,7 @@ using AspNetCoreRateLimit;
 using CloudinaryDotNet;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using Appilico.Server.API.Data;
 using Appilico.Server.API.Middleware;
+using Appilico.Server.Business.Behaviors;
 using Appilico.Server.Business.Interfaces;
 using Appilico.Server.Business.Mappings;
 using Appilico.Server.Business.Services;
@@ -79,8 +81,22 @@ builder.Services.AddAuthorization();
 // Repositories & Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Email service — use NullEmailService in Development, SmtpEmailService in Production
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IEmailService, NullEmailService>();
+else
+    builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
+// File storage — LocalFileStorageService in Development, AzureBlobStorageService in Production
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+else
+    builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+
+// Stripe payment service
+builder.Services.AddScoped<IStripeService, StripePaymentService>();
+
 // Business Services
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
@@ -98,12 +114,22 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 
-// New public-facing services
+// Public-facing services
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<IVisualService, VisualService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<INewsletterService, NewsletterService>();
+
+// MediatR + pipeline behaviours (used by new CQRS handlers)
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ValidationBehaviour<,>).Assembly);
+});
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviour<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehaviour<,>));
 
 // Cloudinary
 var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
@@ -131,6 +157,8 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 var allowedOrigins = new[]
 {
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
     "https://appilico-client-aif9.vercel.app",
     "https://appilico-client.vercel.app",
     "https://appilico-web.vercel.app",
@@ -228,6 +256,33 @@ app.MapGet("/", () => Results.Ok(new
     swagger = "/swagger/index.html",
     timestamp = DateTime.UtcNow
 }));
+
+// Health check endpoint — tests DB connectivity
+app.MapGet("/health", async (AppDbContext db) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        return Results.Ok(new
+        {
+            status = canConnect ? "healthy" : "degraded",
+            db = canConnect ? "connected" : "unreachable",
+            version = "v1",
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(new
+        {
+            status = "degraded",
+            db = "error",
+            error = ex.Message,
+            version = "v1",
+            timestamp = DateTime.UtcNow
+        });
+    }
+});
 
 // Seed database
 await DatabaseSeeder.SeedAsync(app.Services);

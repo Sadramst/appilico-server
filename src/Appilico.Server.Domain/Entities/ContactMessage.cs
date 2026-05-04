@@ -20,6 +20,18 @@ public class ContactMessage : BaseAuditableEntity
     /// <summary>Gets or sets the message body.</summary>
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the project type.</summary>
+    public string? ProjectType { get; set; }
+
+    /// <summary>Gets or sets the budget range.</summary>
+    public string? BudgetRange { get; set; }
+
+    /// <summary>Gets or sets the preferred contact method.</summary>
+    public string? PreferredContactMethod { get; set; }
+
     /// <summary>Gets or sets whether the message has been read.</summary>
     public bool IsRead { get; set; }
+
+    /// <summary>Gets or sets when the message was read.</summary>
+    public DateTime? ReadAt { get; set; }
 }

@@ -23,14 +23,17 @@ public class BlogPost : BaseAuditableEntity
     /// <summary>Gets or sets the author name.</summary>
     public string Author { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the publish date.</summary>
-    public DateTime PublishedAt { get; set; }
+    /// <summary>Gets or sets the publish date (nullable — null means not yet published).</summary>
+    public DateTime? PublishedAt { get; set; }
 
     /// <summary>Gets or sets the estimated read time in minutes.</summary>
     public int ReadTimeMinutes { get; set; }
 
     /// <summary>Gets or sets the cover image URL.</summary>
     public string? ImageUrl { get; set; }
+
+    /// <summary>Gets or sets the thumbnail image URL.</summary>
+    public string? ThumbnailUrl { get; set; }
 
     /// <summary>Gets or sets comma-separated tags.</summary>
     public string Tags { get; set; } = string.Empty;

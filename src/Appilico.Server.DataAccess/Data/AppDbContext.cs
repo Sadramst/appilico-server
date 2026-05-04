@@ -105,6 +105,18 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     /// <summary>Gets or sets the Visuals table.</summary>
     public DbSet<Visual> Visuals => Set<Visual>();
 
+    /// <summary>Gets or sets the VisualDownloads table.</summary>
+    public DbSet<VisualDownload> VisualDownloads => Set<VisualDownload>();
+
+    /// <summary>Gets or sets the Subscriptions table.</summary>
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+
+    /// <summary>Gets or sets the SubscriptionHistories table.</summary>
+    public DbSet<SubscriptionHistory> SubscriptionHistories => Set<SubscriptionHistory>();
+
+    /// <summary>Gets or sets the NewsletterSubscribers table.</summary>
+    public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
+
     /// <summary>Configures the model using Fluent API.</summary>
     protected override void OnModelCreating(ModelBuilder builder)
     {

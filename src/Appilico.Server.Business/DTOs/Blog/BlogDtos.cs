@@ -10,10 +10,13 @@ public class BlogPostDto
     public string Content { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
-    public DateTime PublishedAt { get; set; }
+    public DateTime? PublishedAt { get; set; }
     public int ReadTimeMinutes { get; set; }
     public string? ImageUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public bool IsPublished { get; set; }
     public List<string> Tags { get; set; } = new();
+    public List<BlogPostDto> RelatedPosts { get; set; } = new();
 }
 
 /// <summary>Request DTO for creating a blog post.</summary>
@@ -23,8 +26,23 @@ public class CreateBlogPostRequest
     public string Excerpt { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
-    public string Author { get; set; } = string.Empty;
+    public string Author { get; set; } = "Appilico Engineering";
     public string? ImageUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public List<string> Tags { get; set; } = new();
     public bool IsPublished { get; set; } = true;
+}
+
+/// <summary>Request DTO for updating an existing blog post.</summary>
+public class UpdateBlogPostRequest
+{
+    public string? Title { get; set; }
+    public string? Excerpt { get; set; }
+    public string? Content { get; set; }
+    public string? Category { get; set; }
+    public string? Author { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public List<string>? Tags { get; set; }
+    public bool? IsPublished { get; set; }
 }

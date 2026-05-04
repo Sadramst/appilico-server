@@ -50,7 +50,7 @@ public static class DatabaseSeeder
 
     private static async Task SeedRolesAsync(RoleManager<AppRole> roleManager)
     {
-        string[] roles = { AppConstants.Roles.Admin, AppConstants.Roles.Manager, AppConstants.Roles.Customer };
+        string[] roles = { AppConstants.Roles.SuperAdmin, AppConstants.Roles.Admin, AppConstants.Roles.Manager, AppConstants.Roles.Customer };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -63,9 +63,28 @@ public static class DatabaseSeeder
         if (await userManager.FindByEmailAsync("admin@appilico.com") != null)
             return await context.Customers.ToListAsync();
 
+        // SuperAdmin — full system access
+        var superAdmin = new AppUser
+        {
+            UserName = "admin@appilico.com.au",
+            Email = "admin@appilico.com.au",
+            FirstName = "Super",
+            LastName = "Admin",
+            EmailConfirmed = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var r = await userManager.CreateAsync(superAdmin, "SuperAdmin123!");
+        if (r.Succeeded)
+        {
+            await userManager.AddToRoleAsync(superAdmin, AppConstants.Roles.SuperAdmin);
+            await userManager.AddToRoleAsync(superAdmin, AppConstants.Roles.Admin);
+        }
+
         // Admin
         var admin = new AppUser { UserName = "admin@appilico.com", Email = "admin@appilico.com", FirstName = "System", LastName = "Admin", EmailConfirmed = true, IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
-        var r = await userManager.CreateAsync(admin, "Admin@123!");
+        r = await userManager.CreateAsync(admin, "Admin@123!");
         if (r.Succeeded) await userManager.AddToRoleAsync(admin, AppConstants.Roles.Admin);
 
         // Manager
@@ -911,95 +930,138 @@ public static class DatabaseSeeder
 
     private static async Task SeedBlogPostsAsync(AppDbContext context)
     {
-        if (await context.BlogPosts.AnyAsync())
+        // Idempotent: check by canonical slug
+        if (await context.BlogPosts.AnyAsync(p => p.Slug == "why-australian-mining-companies-are-moving-to-real-time-analytics"))
             return;
 
         var posts = new[]
         {
             new Domain.Entities.BlogPost
             {
-                Title = "Why Australian Mining Companies Are Moving to Real-Time Analytics in 2026",
-                Slug = "why-australian-mining-companies-are-moving-to-real-time-analytics-in-2026",
+                Title = "Why Australian Mining Companies Are Moving to Real-Time Analytics",
+                Slug = "why-australian-mining-companies-are-moving-to-real-time-analytics",
                 Excerpt = "Discover how leading Australian mining operations are leveraging real-time data analytics to cut costs, improve safety, and boost productivity in an increasingly competitive global market.",
                 Content = @"<p>Australia's mining sector contributes over $200 billion annually to the national economy, yet many operations still rely on manual reporting processes that are days or even weeks behind reality. In 2026, that's changing fast.</p>
+
+<h2>The Pressure to Modernise</h2>
+<p>Iron ore, gold, and lithium producers across Western Australia, Queensland, and the Northern Territory are facing simultaneous pressure from investors demanding ESG transparency, regulators requiring stricter safety reporting, and a global market where operational efficiency determines margin.</p>
+
+<p>The companies that once relied on weekly Excel reports are now operating at a fundamental disadvantage. When a competitor can identify a throughput bottleneck in real-time and correct it before the shift ends, the cumulative gap in output becomes enormous.</p>
 
 <h2>The Shift to Real-Time</h2>
 <p>Real-time analytics platforms allow site managers to monitor equipment performance, ore grades, and safety metrics as they happen. When a conveyor belt starts showing signs of failure, you know in seconds — not the next morning when the shift report lands on your desk.</p>
 
-<h2>Key Benefits</h2>
+<p>Modern IoT sensor networks, combined with edge computing capabilities, now make it possible to stream data from even the most remote operations to cloud analytics platforms with sub-second latency. The infrastructure cost that once made this prohibitive for mid-tier miners has dropped by over 80% in five years.</p>
+
+<h2>Key Benefits Seen Across the Industry</h2>
 <ul>
 <li><strong>Cost reduction:</strong> Predictive maintenance alone can save 15–25% on equipment costs.</li>
 <li><strong>Safety improvements:</strong> Real-time hazard monitoring reduces incidents by up to 30%.</li>
 <li><strong>Productivity gains:</strong> Optimised scheduling and throughput analysis increase output without additional capital expenditure.</li>
+<li><strong>ESG reporting:</strong> Automated emissions tracking and water usage monitoring satisfy investor and regulatory requirements without additional headcount.</li>
 </ul>
 
-<h2>What's Driving Adoption?</h2>
+<h2>What's Driving Adoption Now</h2>
 <p>Power BI custom visuals tailored to mining operations have made it dramatically easier to visualise complex operational data. Instead of Excel spreadsheets, site managers now work with interactive dashboards showing ore grade waterfalls, equipment heatmaps, and AI-powered natural language query interfaces.</p>
 
-<p>The combination of affordable cloud infrastructure, purpose-built mining analytics tools, and pressure to reduce operating costs has made 2026 a tipping point for the industry.</p>",
+<p>The combination of affordable cloud infrastructure, purpose-built mining analytics tools, and pressure to reduce operating costs has made this moment a tipping point for the industry. The question is no longer whether to adopt real-time analytics — it's how quickly you can get there before competitors extend their lead.</p>
+
+<h2>Starting Points for Mine Operators</h2>
+<p>Most successful implementations start narrow: pick one high-value use case, such as equipment utilisation or production reconciliation, and build a proof of concept in 4–6 weeks. Demonstrating ROI on a single process makes the board-level case for broader rollout straightforward.</p>",
                 Category = "Analytics",
-                Author = "Appilico Team",
+                Author = "Appilico Engineering",
                 PublishedAt = DateTime.UtcNow.AddDays(-10),
-                ReadTimeMinutes = 5,
+                ReadTimeMinutes = 6,
                 Tags = "analytics,mining,real-time,Australia,Power BI",
                 IsPublished = true
             },
             new Domain.Entities.BlogPost
             {
-                Title = "Power BI Custom Visuals: What They Are and Why Mining Operations Need Them",
-                Slug = "power-bi-custom-visuals-what-they-are-and-why-mining-operations-need-them",
-                Excerpt = "Standard Power BI charts weren't built for mining. Learn how custom visuals designed specifically for resource extraction give your team the insights they actually need.",
-                Content = @"<p>Power BI ships with dozens of built-in chart types, but when you're trying to visualise the production output of a 24/7 open-cut gold mine, a standard bar chart simply doesn't cut it.</p>
+                Title = "Power BI Custom Visuals: A Technical Guide for Mining Analytics",
+                Slug = "power-bi-custom-visuals-technical-guide",
+                Excerpt = "Standard Power BI charts weren't built for mining. Learn how custom visuals designed specifically for resource extraction give your team the insights they actually need — and how they're built.",
+                Content = @"<p>Power BI ships with dozens of built-in chart types, but when you're trying to visualise the production output of a 24/7 open-cut gold mine, a standard bar chart simply doesn't cut it. This guide covers the technical architecture of mining-specific custom visuals and what to look for when evaluating them.</p>
 
 <h2>What Are Custom Visuals?</h2>
-<p>Custom visuals are independently developed visualisation components that can be imported into Power BI Desktop and the Power BI Service. They follow the same data-binding model as native visuals but can implement any rendering logic — from specialised Gantt charts to AI-powered natural language query panels.</p>
+<p>Custom visuals are independently developed visualisation components built using the Power BI Visuals SDK, which wraps a TypeScript and D3.js rendering engine. They're packaged as .pbiviz files, can be imported into Power BI Desktop and the Power BI Service, and follow the same data-binding model as native visuals.</p>
+
+<p>Unlike native visuals, custom visuals can implement any rendering logic — from specialised Gantt charts that understand shift patterns to AI-powered natural language query panels that let operators ask plain-English questions about their data.</p>
+
+<h2>The Technical Architecture</h2>
+<p>A well-built mining custom visual has three layers:</p>
+<ol>
+<li><strong>Data mapping layer:</strong> Translates Power BI's tabular data model into the domain objects the visual understands (shifts, equipment IDs, ore grades, etc.).</li>
+<li><strong>Calculation layer:</strong> Performs mining-specific calculations such as OEE (Overall Equipment Effectiveness), TRIFR (Total Recordable Injury Frequency Rate), or ore recovery percentage.</li>
+<li><strong>Rendering layer:</strong> Uses D3.js or WebGL to render the visual, with support for Power BI's theme system, selection/cross-filtering, and tooltips.</li>
+</ol>
 
 <h2>Mining-Specific Visuals That Make a Difference</h2>
 <ul>
-<li><strong>Production Gantt Charts:</strong> Track planned vs actual production schedules across multiple equipment units simultaneously.</li>
-<li><strong>Equipment Heatmaps:</strong> Visualise utilisation rates, downtime patterns, and maintenance windows across your entire fleet.</li>
-<li><strong>Ore Grade Waterfall:</strong> Understand the grade profile from blast to processing plant in a single view.</li>
-<li><strong>Safety KPI Dashboards:</strong> TRIFR, LTIFR, near-miss rates, and compliance metrics in a regulatory-ready format.</li>
-<li><strong>Cost Per Tonne Analysis:</strong> Drill down from site-level to activity-level costs with a single click.</li>
+<li><strong>Production Gantt Charts:</strong> Track planned vs actual production schedules across multiple equipment units simultaneously, with drill-down by shift, crew, and activity type.</li>
+<li><strong>Equipment Heatmaps:</strong> Visualise utilisation rates, downtime patterns, and maintenance windows across your entire fleet on a single canvas.</li>
+<li><strong>Ore Grade Waterfall:</strong> Understand the grade profile from blast to processing plant in a single view, with variance analysis against model.</li>
+<li><strong>Safety KPI Dashboards:</strong> TRIFR, LTIFR, near-miss rates, and compliance metrics rendered in a regulatory-ready format for safety committee reporting.</li>
+<li><strong>Cost Per Tonne Analysis:</strong> Drill down from site-level to activity-level costs with a single click, segmented by equipment class, shift, or ore type.</li>
+<li><strong>AI Insights Panel:</strong> Natural language Q&A interface powered by Azure OpenAI, letting operators query operational data without needing SQL or DAX skills.</li>
 </ul>
 
-<h2>Return on Investment</h2>
-<p>Mining companies that deploy purpose-built visual analytics typically see ROI within 3–6 months through reduced reporting overhead, faster decision-making, and early identification of production issues.</p>",
+<h2>Performance Considerations at Scale</h2>
+<p>Mining datasets are large. A single site might generate 50,000+ data points per shift across hundreds of sensors. Custom visuals that don't implement data reduction strategies — aggregation, windowing, or server-side pagination — will degrade Power BI report performance significantly.</p>
+
+<p>Look for visuals that explicitly document their data volume limits and provide configuration options for aggregation granularity.</p>
+
+<h2>Integration with Common Mining Systems</h2>
+<p>The most valuable custom visuals are those that understand the data schemas coming out of common mining systems: Wenco, Modular Mining, Pronto Xi, SAP PM, and OSIsoft PI. Pre-built connectors dramatically reduce the time-to-value compared to custom data transformation work.</p>",
                 Category = "Technology",
-                Author = "Appilico Team",
+                Author = "Appilico Engineering",
                 PublishedAt = DateTime.UtcNow.AddDays(-20),
-                ReadTimeMinutes = 6,
-                Tags = "Power BI,custom visuals,mining,analytics,dashboards",
+                ReadTimeMinutes = 7,
+                Tags = "Power BI,custom visuals,mining,analytics,SDK,D3.js",
                 IsPublished = true
             },
             new Domain.Entities.BlogPost
             {
-                Title = "The Real Cost of Manual Reporting in Mining Operations",
-                Slug = "the-real-cost-of-manual-reporting-in-mining-operations",
-                Excerpt = "Manual spreadsheet reporting doesn't just waste time — it erodes decision-making quality, hides operational risks, and costs mining companies millions every year. Here's the full picture.",
-                Content = @"<p>Ask any mine site manager how long it takes to compile the monthly operational report and you'll hear answers ranging from two days to two weeks. Multiply that across your organisation and the numbers become staggering.</p>
+                Title = "Azure vs On-Premises: The Right Analytics Infrastructure for WA Mining",
+                Slug = "azure-vs-on-premises-wa-mining",
+                Excerpt = "For Western Australian mining operations considering analytics infrastructure, the Azure vs on-premises debate has a more nuanced answer than the cloud vendors would have you believe.",
+                Content = @"<p>The cloud-first narrative has dominated enterprise IT for a decade. But Western Australian mining operations have some of the world's most challenging connectivity environments — remote sites, intermittent satellite links, and data sovereignty requirements that don't always fit neatly into the standard cloud pitch.</p>
 
-<h2>The Hidden Costs</h2>
-<p>Manual reporting carries costs that rarely appear on the balance sheet:</p>
+<p>Here's an honest comparison of Azure and on-premises infrastructure for mining analytics workloads in WA, based on what we've seen work and fail at real operations.</p>
+
+<h2>Where Azure Wins</h2>
+<p><strong>Elastic compute:</strong> Month-end reporting, annual reconciliations, and intensive modelling workloads can spike compute requirements 10–20x above the daily baseline. Azure's pay-per-use model means you only pay for that capacity when you need it.</p>
+
+<p><strong>Managed services:</strong> Azure Synapse Analytics, Azure Data Factory, and Power BI Premium handle the operational overhead of running a data warehouse. Your team focuses on analysis, not patching database servers.</p>
+
+<p><strong>Disaster recovery:</strong> Geo-redundant storage and automated backups across Azure regions provide a level of resilience that would cost millions to replicate with on-premises hardware.</p>
+
+<p><strong>AI and ML capabilities:</strong> Azure OpenAI Service, Azure Machine Learning, and Cognitive Services give mining analysts access to AI capabilities that would require a dedicated data science team to build in-house.</p>
+
+<h2>Where On-Premises Still Has the Edge</h2>
+<p><strong>Latency at the edge:</strong> If your SCADA system needs sub-100ms response times and you're operating from a remote site with 200ms satellite latency to the nearest Azure region, cloud isn't the right answer for that specific workload.</p>
+
+<p><strong>Data sovereignty:</strong> Some mining operations, particularly those involving joint ventures with government entities or working on culturally sensitive land, have data residency requirements that make cloud storage legally complicated.</p>
+
+<p><strong>Connectivity reliability:</strong> A site running on a 50Mbps VSAT link with 5–10% packet loss is not an environment where cloud-dependent systems will perform reliably. On-premises systems continue operating during outages.</p>
+
+<h2>The Hybrid Architecture That Actually Works</h2>
+<p>For most WA mining operations, the answer isn't either/or. The architecture that's proven most reliable combines:</p>
 <ul>
-<li><strong>Labour cost:</strong> Senior engineers spending 20–30% of their time on data collection and formatting rather than analysis.</li>
-<li><strong>Decision lag:</strong> Decisions made on data that's 48–72 hours old in a sector where conditions change hourly.</li>
-<li><strong>Error risk:</strong> A 2023 industry survey found that 67% of mining companies had made at least one significant operational decision based on incorrect data from manual reports in the prior 12 months.</li>
-<li><strong>Compliance exposure:</strong> Regulatory reporting errors can trigger audits and fines running into six figures.</li>
+<li>On-premises edge servers at each site for real-time SCADA data collection, local dashboards, and operational system integration</li>
+<li>Azure Synapse Analytics as the central data warehouse, receiving batched data from sites on a scheduled cadence (typically hourly)</li>
+<li>Power BI Premium for corporate reporting, with data cached in the cloud so corporate users aren't dependent on site connectivity</li>
+<li>Azure IoT Hub for streaming sensor data from sites with adequate connectivity</li>
 </ul>
 
-<h2>What Automated Reporting Looks Like in Practice</h2>
-<p>Modern analytics platforms connect directly to your SCADA systems, ERP, and IoT sensor networks. Reports that once took three days to compile are generated automatically overnight — or in real-time for critical KPIs.</p>
+<h2>Making the Decision</h2>
+<p>The starting question isn't 'Azure or on-premises' — it's 'what are the latency, connectivity, sovereignty, and cost requirements for each workload?' Map those requirements to the capabilities of each platform, and the right architecture usually becomes clear.</p>
 
-<p>The shift isn't just about speed. When your team is no longer buried in spreadsheets, they start asking better questions. That's where the real value lies.</p>
-
-<h2>Making the Business Case</h2>
-<p>The typical return on a mining analytics implementation: $4–12 saved for every $1 invested over a three-year period. If your annual reporting overhead exceeds $500,000, the payback period is usually under 12 months.</p>",
-                Category = "Operations",
-                Author = "Appilico Team",
+<p>What we consistently find is that the real-time operational layer benefits from on-premises or edge compute, while the analytical and reporting layer benefits from cloud scale and managed services. The two aren't mutually exclusive.</p>",
+                Category = "Infrastructure",
+                Author = "Appilico Engineering",
                 PublishedAt = DateTime.UtcNow.AddDays(-35),
-                ReadTimeMinutes = 7,
-                Tags = "operations,reporting,efficiency,mining,cost reduction",
+                ReadTimeMinutes = 8,
+                Tags = "Azure,on-premises,infrastructure,mining,cloud,Western Australia",
                 IsPublished = true
             }
         };
@@ -1010,58 +1072,88 @@ public static class DatabaseSeeder
 
     private static async Task SeedVisualsAsync(AppDbContext context)
     {
-        if (await context.Visuals.AnyAsync())
+        if (await context.Visuals.AnyAsync(v => v.Slug == "mine-production-gantt"))
             return;
 
         var visuals = new[]
         {
             new Domain.Entities.Visual
             {
-                Name = "Production Gantt",
-                Description = "Track planned vs actual production schedules across equipment units with drill-down to shift-level detail.",
-                Category = "Mining",
+                Slug = "mine-production-gantt",
+                Name = "Mine Production Gantt",
+                Description = "Shift-level drill-down with crew and equipment breakdown",
+                Category = Domain.Enums.VisualCategory.Production,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Starter,
+                Tags = "[\"production\",\"gantt\",\"shifts\",\"mining\"]",
                 Type = "Gantt",
-                SortOrder = 1
+                IsActive = true,
+                SortOrder = 1,
+                CreatedBy = "system"
             },
             new Domain.Entities.Visual
             {
-                Name = "Equipment Heatmap",
-                Description = "Visualise fleet utilisation rates, downtime patterns, and maintenance windows across your entire operation.",
-                Category = "Mining",
+                Slug = "equipment-utilisation-heatmap",
+                Name = "Equipment Utilisation Heatmap",
+                Description = "Real-time OEE tracking across your fleet with hourly breakdown",
+                Category = Domain.Enums.VisualCategory.Equipment,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Starter,
+                Tags = "[\"equipment\",\"heatmap\",\"oee\",\"fleet\"]",
                 Type = "Heatmap",
-                SortOrder = 2
+                IsActive = true,
+                SortOrder = 2,
+                CreatedBy = "system"
             },
             new Domain.Entities.Visual
             {
-                Name = "Safety KPI",
-                Description = "TRIFR, LTIFR, near-miss rates, and compliance metrics in a regulatory-ready, drill-through dashboard.",
-                Category = "Mining",
+                Slug = "safety-kpi-dashboard",
+                Name = "Safety KPI Dashboard",
+                Description = "Leading and lagging indicators with automated trend alerts",
+                Category = Domain.Enums.VisualCategory.Safety,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Starter,
+                Tags = "[\"safety\",\"kpi\",\"trifr\",\"ltifr\"]",
                 Type = "KPI",
-                SortOrder = 3
+                IsActive = true,
+                SortOrder = 3,
+                CreatedBy = "system"
             },
             new Domain.Entities.Visual
             {
+                Slug = "ore-grade-waterfall",
                 Name = "Ore Grade Waterfall",
-                Description = "Understand the complete grade profile from blast to processing plant in a single interactive waterfall view.",
-                Category = "Mining",
+                Description = "Grade tracking from bench sample to plant output with variance",
+                Category = Domain.Enums.VisualCategory.Quality,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Professional,
+                Tags = "[\"ore\",\"grade\",\"waterfall\",\"quality\"]",
                 Type = "Waterfall",
-                SortOrder = 4
+                IsActive = true,
+                SortOrder = 4,
+                CreatedBy = "system"
             },
             new Domain.Entities.Visual
             {
-                Name = "Cost Per Tonne",
-                Description = "Drill from site-level to activity-level mining costs with one click. Identify cost overruns before they escalate.",
-                Category = "Mining",
+                Slug = "cost-per-tonne-tracker",
+                Name = "Cost Per Tonne Tracker",
+                Description = "Operational cost breakdown by category with anomaly detection",
+                Category = Domain.Enums.VisualCategory.Finance,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Professional,
+                Tags = "[\"cost\",\"finance\",\"anomaly\",\"tonne\"]",
                 Type = "Analytics",
-                SortOrder = 5
+                IsActive = true,
+                SortOrder = 5,
+                CreatedBy = "system"
             },
             new Domain.Entities.Visual
             {
-                Name = "AI NL Query",
-                Description = "Ask questions about your operational data in plain English. Powered by AI, results delivered as charts and tables instantly.",
-                Category = "Mining",
+                Slug = "ai-natural-language-query",
+                Name = "AI Natural Language Query Panel",
+                Description = "Ask questions about your operations in plain English",
+                Category = Domain.Enums.VisualCategory.AI,
+                RequiredPlan = Domain.Enums.SubscriptionTier.Enterprise,
+                Tags = "[\"ai\",\"nlp\",\"query\",\"language\"]",
                 Type = "AI",
-                SortOrder = 6
+                IsActive = true,
+                SortOrder = 6,
+                CreatedBy = "system"
             }
         };
 

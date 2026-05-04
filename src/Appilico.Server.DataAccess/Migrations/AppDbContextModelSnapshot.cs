@@ -141,6 +141,9 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -163,6 +166,12 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("PasswordResetExpiry")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
 
@@ -175,6 +184,9 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<string>("SubscriptionPlan")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("SubscriptionTier")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
@@ -292,7 +304,7 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("PublishedAt")
+                    b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ReadTimeMinutes")
@@ -304,6 +316,9 @@ namespace Appilico.Server.DataAccess.Migrations
 
                     b.Property<string>("Tags")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
@@ -513,6 +528,9 @@ namespace Appilico.Server.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BudgetRange")
+                        .HasColumnType("text");
+
                     b.Property<string>("Company")
                         .HasColumnType("text");
 
@@ -539,6 +557,15 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PreferredContactMethod")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProjectType")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Subject")
                         .HasColumnType("text");
@@ -795,6 +822,53 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.HasIndex("VariantId");
 
                     b.ToTable("InventoryTransactions");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.NewsletterSubscriber", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("SubscribedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("UnsubscribedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("NewsletterSubscribers");
                 });
 
             modelBuilder.Entity("Appilico.Server.Domain.Entities.Order", b =>
@@ -1550,15 +1624,14 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.ToTable("SpecialOfferProducts");
                 });
 
-            modelBuilder.Entity("Appilico.Server.Domain.Entities.Visual", b =>
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -1566,11 +1639,132 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("NextBillingAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("StripePriceId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("StripeSubscriptionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Subscriptions");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.SubscriptionHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FromTier")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ToTier")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("SubscriptionHistories");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.Visual", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DataRequirements")
+                        .HasColumnType("text");
+
                     b.Property<string>("DemoUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DownloadCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullDescription")
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
@@ -1586,8 +1780,32 @@ namespace Appilico.Server.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PowerBIVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreviewImageUrls")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RequiredPlan")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TechnicalSpecs")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -1602,6 +1820,50 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Visuals");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.VisualDownload", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DownloadedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("IPAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("VisualId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VisualId");
+
+                    b.ToTable("VisualDownloads");
                 });
 
             modelBuilder.Entity("Appilico.Server.Domain.Entities.Voucher", b =>
@@ -1738,8 +2000,20 @@ namespace Appilico.Server.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("IPAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InterestedPlan")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsNotified")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Plan")
                         .HasColumnType("text");
@@ -2198,6 +2472,47 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Navigation("SpecialOffer");
                 });
 
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.Subscription", b =>
+                {
+                    b.HasOne("Appilico.Server.Domain.Entities.AppUser", "User")
+                        .WithOne("Subscription")
+                        .HasForeignKey("Appilico.Server.Domain.Entities.Subscription", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.SubscriptionHistory", b =>
+                {
+                    b.HasOne("Appilico.Server.Domain.Entities.Subscription", "Subscription")
+                        .WithMany("History")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subscription");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.VisualDownload", b =>
+                {
+                    b.HasOne("Appilico.Server.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Appilico.Server.Domain.Entities.Visual", "Visual")
+                        .WithMany("Downloads")
+                        .HasForeignKey("VisualId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Visual");
+                });
+
             modelBuilder.Entity("Appilico.Server.Domain.Entities.VoucherRedemption", b =>
                 {
                     b.HasOne("Appilico.Server.Domain.Entities.Customer", "Customer")
@@ -2300,6 +2615,8 @@ namespace Appilico.Server.DataAccess.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Subscription");
                 });
 
             modelBuilder.Entity("Appilico.Server.Domain.Entities.Brand", b =>
@@ -2372,6 +2689,16 @@ namespace Appilico.Server.DataAccess.Migrations
             modelBuilder.Entity("Appilico.Server.Domain.Entities.SpecialOffer", b =>
                 {
                     b.Navigation("SpecialOfferProducts");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.Subscription", b =>
+                {
+                    b.Navigation("History");
+                });
+
+            modelBuilder.Entity("Appilico.Server.Domain.Entities.Visual", b =>
+                {
+                    b.Navigation("Downloads");
                 });
 
             modelBuilder.Entity("Appilico.Server.Domain.Entities.Voucher", b =>

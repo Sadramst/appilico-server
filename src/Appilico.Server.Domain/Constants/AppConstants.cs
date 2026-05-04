@@ -8,6 +8,8 @@ public static class AppConstants
     /// <summary>Role name constants.</summary>
     public static class Roles
     {
+        /// <summary>SuperAdmin role — full system access.</summary>
+        public const string SuperAdmin = "SuperAdmin";
         /// <summary>Admin role.</summary>
         public const string Admin = "Admin";
         /// <summary>Manager role.</summary>
