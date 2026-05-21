@@ -36,13 +36,21 @@ namespace Appilico.Server.DataAccess.Migrations
                 type: "timestamp without time zone",
                 nullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Category",
-                table: "Visuals",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""Visuals""
+                ALTER COLUMN ""Category"" TYPE integer
+                USING (
+                    CASE LOWER(COALESCE(""Category"", ''))
+                        WHEN 'production' THEN 0
+                        WHEN 'equipment' THEN 1
+                        WHEN 'safety' THEN 2
+                        WHEN 'quality' THEN 3
+                        WHEN 'finance' THEN 4
+                        WHEN 'ai' THEN 5
+                        ELSE 0
+                    END
+                );
+            ");
 
             migrationBuilder.AddColumn<string>(
                 name: "DataRequirements",
