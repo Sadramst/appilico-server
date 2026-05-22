@@ -1,8 +1,22 @@
-# Primo Meats API — Client Integration Manual
+# Appilico API — Legacy Client Integration Manual
 
-> **Base URL (Production):** `https://appilico-server.onrender.com`
-> **Base URL (Local Dev):** `http://localhost:5034`
-> **Swagger UI:** `{BASE_URL}/swagger`
+> **Status:** Legacy/stale reference. Validate against live Swagger or the current controllers before using this document as a client contract.
+> **Base URL (Production):** `https://api.appilico.com`
+> **Base URL (Local Dev):** use the URL printed by `dotnet run --project src/Appilico.Server.API`
+> **Swagger UI:** Enabled in Development. Production Swagger is disabled unless explicitly enabled.
+
+Operational headers/endpoints:
+
+- Requests may include `X-Correlation-Id`; responses echo the value for support and log tracing.
+- `GET /health/live` reports process liveness.
+- `GET /health/ready` reports database and configured integration readiness.
+
+Payment/subscription contract notes:
+
+- Card and debit payments return a pending local payment plus `providerClientSecret` and `providerStatus` when Stripe is enabled.
+- Orders are marked paid only after a verified Stripe webhook confirms payment success.
+- Refunds for Stripe-backed payments call Stripe before local refund state is persisted.
+- Paid subscription upgrades may return `requiresPayment=true`, `paymentClientSecret`, `pendingTier`, and `providerStatus`; paid access is granted only after Stripe reports an active or trialing subscription.
 
 All endpoints return a standard JSON envelope:
 
@@ -236,7 +250,7 @@ GET /api/products
   "categoryId": "guid",
   "categoryName": "Beef Steaks",
   "brandId": "guid",
-  "brandName": "Primo Cuts",
+  "brandName": "Appilico Brand",
   "basePrice": 32.99,
   "stockQuantity": 40,
   "isActive": true,
@@ -473,7 +487,7 @@ GET /api/brands
 ```json
 {
   "id": "guid",
-  "name": "Primo Cuts",
+  "name": "Appilico Brand",
   "description": "Our signature premium meat range",
   "logoUrl": null,
   "isActive": true
@@ -1566,7 +1580,7 @@ GET /api/settings
 {
   "id": "guid",
   "key": "Store.Name",
-  "value": "Primo Meats",
+  "value": "Appilico Store",
   "group": "General",
   "description": "Store display name"
 }
@@ -1601,7 +1615,7 @@ PUT /api/settings
 ```json
 {
   "settings": [
-    { "key": "Store.Name", "value": "Primo Meats" },
+    { "key": "Store.Name", "value": "Appilico Store" },
     { "key": "Store.Currency", "value": "AUD" }
   ]
 }
@@ -1631,7 +1645,7 @@ Content-Type: multipart/form-data
 
 ```json
 {
-  "url": "https://res.cloudinary.com/dijoqk8f7/image/upload/v1.../products/image.jpg",
+  "url": "https://res.cloudinary.com/your-cloud-name/image/upload/v1.../products/image.jpg",
   "publicId": "products/image"
 }
 ```

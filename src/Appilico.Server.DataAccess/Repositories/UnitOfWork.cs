@@ -27,6 +27,14 @@ public class UnitOfWork : IUnitOfWork
     private IInventoryRepository? _inventory;
     private IAppSettingRepository? _settings;
     private IAuditLogRepository? _auditLogs;
+    private IRefreshTokenRepository? _refreshTokens;
+    private IBlogPostRepository? _blogPosts;
+    private IVisualRepository? _visuals;
+    private ISubscriptionRepository? _subscriptions;
+    private INewsletterSubscriberRepository? _newsletterSubscribers;
+    private IWaitlistRepository? _waitlistEntries;
+    private IContactMessageRepository? _contactMessages;
+    private IExternalWebhookEventRepository? _externalWebhookEvents;
 
     /// <summary>Initializes a new instance of the <see cref="UnitOfWork"/> class.</summary>
     public UnitOfWork(AppDbContext context)
@@ -78,6 +86,30 @@ public class UnitOfWork : IUnitOfWork
 
     /// <inheritdoc/>
     public IAuditLogRepository AuditLogs => _auditLogs ??= new AuditLogRepository(_context);
+
+    /// <inheritdoc/>
+    public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
+
+    /// <inheritdoc/>
+    public IBlogPostRepository BlogPosts => _blogPosts ??= new BlogPostRepository(_context);
+
+    /// <inheritdoc/>
+    public IVisualRepository Visuals => _visuals ??= new VisualRepository(_context);
+
+    /// <inheritdoc/>
+    public ISubscriptionRepository Subscriptions => _subscriptions ??= new SubscriptionRepository(_context);
+
+    /// <inheritdoc/>
+    public INewsletterSubscriberRepository NewsletterSubscribers => _newsletterSubscribers ??= new NewsletterSubscriberRepository(_context);
+
+    /// <inheritdoc/>
+    public IWaitlistRepository WaitlistEntries => _waitlistEntries ??= new WaitlistRepository(_context);
+
+    /// <inheritdoc/>
+    public IContactMessageRepository ContactMessages => _contactMessages ??= new ContactMessageRepository(_context);
+
+    /// <inheritdoc/>
+    public IExternalWebhookEventRepository ExternalWebhookEvents => _externalWebhookEvents ??= new ExternalWebhookEventRepository(_context);
 
     /// <inheritdoc/>
     public async Task<int> SaveChangesAsync()

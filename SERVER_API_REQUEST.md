@@ -1,7 +1,8 @@
 # Appilico E-Commerce — Complete Server API Manual
 
-> **Base URL (local):** `http://localhost:5034`
-> **Base URL (deployed):** `https://appilico-server.onrender.com`
+> **Status:** Legacy/stale reference. Validate against live Swagger or the current controllers before using this document as a client contract.
+> **Base URL (local):** use the URL printed by `dotnet run --project src/Appilico.Server.API`
+> **Base URL (deployed):** `https://api.appilico.com`
 > **All responses** use the standard envelope. **Enums** are serialized as **integers** (not strings).
 
 ---
@@ -291,7 +292,7 @@ Every endpoint returns this wrapper:
       "categoryId": "guid",
       "categoryName": "Beef Steaks",
       "brandId": "guid",
-      "brandName": "Primo Cuts",
+      "brandName": "Appilico Brand",
       "basePrice": 32.99,
       "stockQuantity": 40,
       "isActive": true,
@@ -527,7 +528,7 @@ Returns **only top-level** categories (8) with nested `subCategories`. Same shap
   "data": [
     {
       "id": "guid",
-      "name": "Primo Cuts",
+      "name": "Appilico Brand",
       "description": "Premium meat cuts",
       "logoUrl": null,
       "isActive": true
@@ -1505,7 +1506,7 @@ Creates an order from the currently active cart items.
     {
       "id": "guid",
       "key": "Store.Name",
-      "value": "Primo Meats",
+      "value": "Appilico Store",
       "group": "General",
       "description": "Store display name"
     },
@@ -1562,7 +1563,7 @@ Creates an order from the currently active cart items.
 ```json
 {
   "settings": [
-    { "key": "Store.Name", "value": "Primo Meats & Deli" },
+    { "key": "Store.Name", "value": "Appilico Store" },
     { "key": "Store.DeliveryFee", "value": "14.99" }
   ]
 }
@@ -1777,7 +1778,7 @@ Beef, Veal, Lamb, Pork, Poultry, Deli & Cold Cuts, Ready Meals, Pantry
 
 ### Brands (6)
 
-Primo Cuts, Heritage Reserve, Valley Fresh, Artisan Kitchen, Rustic Pantry, Grill Master
+Appilico Brand, Heritage Reserve, Valley Fresh, Artisan Kitchen, Rustic Pantry, Grill Master
 
 ### Products (74 total)
 

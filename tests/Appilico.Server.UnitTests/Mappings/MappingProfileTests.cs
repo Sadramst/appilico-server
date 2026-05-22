@@ -13,6 +13,7 @@ using Appilico.Server.Business.DTOs.Payment;
 using Appilico.Server.Business.Mappings;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Enums;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Appilico.Server.UnitTests.Mappings;
 
@@ -22,7 +23,7 @@ public class MappingProfileTests
 
     public MappingProfileTests()
     {
-        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>(), NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
 

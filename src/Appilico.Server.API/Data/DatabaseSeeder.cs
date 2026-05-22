@@ -23,7 +23,8 @@ public static class DatabaseSeeder
 
         try
         {
-            await context.Database.MigrateAsync();
+            if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+                await context.Database.MigrateAsync();
 
             await SeedRolesAsync(roleManager);
             var customers = await SeedUsersAsync(userManager, context);
@@ -60,8 +61,9 @@ public static class DatabaseSeeder
 
     private static async Task<List<Customer>> SeedUsersAsync(UserManager<AppUser> userManager, AppDbContext context)
     {
-        if (await userManager.FindByEmailAsync("admin@appilico.com") != null)
-            return await context.Customers.ToListAsync();
+        var existingCustomers = await context.Customers.ToListAsync();
+        if (await userManager.FindByEmailAsync("admin@appilico.com") != null && existingCustomers.Any())
+            return existingCustomers;
 
         // SuperAdmin — full system access
         var superAdmin = new AppUser

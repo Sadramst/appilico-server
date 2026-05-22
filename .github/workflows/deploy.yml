@@ -5,7 +5,31 @@ on:
     branches: [main]
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Appilico.Server.sln
+
+      - name: Build
+        run: dotnet build Appilico.Server.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Appilico.Server.sln --configuration Release --no-build --verbosity normal
+
+      - name: Vulnerability scan
+        run: dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+
   deploy:
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -19,5 +43,17 @@ jobs:
             git pull origin main
             cd /opt/appilico
             docker compose up -d --build backend
+            backend_container=$(docker compose ps -q backend)
+            for attempt in $(seq 1 20); do
+              status=$(docker inspect --format='{{.State.Health.Status}}' "$backend_container" 2>/dev/null || echo starting)
+              if [ "$status" = "healthy" ]; then
+                break
+              fi
+              if [ "$attempt" = "20" ]; then
+                docker compose logs --tail=100 backend
+                exit 1
+              fi
+              sleep 3
+            done
             docker compose restart nginx
             echo "Deployed at $(date)"

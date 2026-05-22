@@ -2,20 +2,22 @@ using Microsoft.Extensions.Logging;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.DTOs.Contact;
 using Appilico.Server.Business.Interfaces;
-using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Entities;
+using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.Business.Services;
 
 /// <summary>Contact service implementation.</summary>
 public class ContactService : IContactService
 {
-    private readonly AppDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailWorkQueue _emailWorkQueue;
     private readonly ILogger<ContactService> _logger;
 
-    public ContactService(AppDbContext db, ILogger<ContactService> logger)
+    public ContactService(IUnitOfWork unitOfWork, IEmailWorkQueue emailWorkQueue, ILogger<ContactService> logger)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
+        _emailWorkQueue = emailWorkQueue;
         _logger = logger;
     }
 
@@ -34,8 +36,11 @@ public class ContactService : IContactService
             Message = request.Message.Trim()
         };
 
-        _db.ContactMessages.Add(message);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.ContactMessages.AddAsync(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _emailWorkQueue.QueueAsync((emailService, _) => emailService.SendContactNotificationAsync(message));
+        await _emailWorkQueue.QueueAsync((emailService, _) => emailService.SendContactAutoReplyAsync(message.Email, message.Name));
 
         _logger.LogInformation("Contact message received from {Email}", request.Email);
         return ApiResponse<bool>.SuccessResponse(true, "Message received. We'll be in touch shortly.");

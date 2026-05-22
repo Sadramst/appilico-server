@@ -19,6 +19,10 @@ public class PaymentDto
     public PaymentStatus Status { get; set; }
     /// <summary>Gets or sets when paid.</summary>
     public DateTime? PaidAt { get; set; }
+    /// <summary>Provider client secret returned only for client-side confirmation flows.</summary>
+    public string? ProviderClientSecret { get; set; }
+    /// <summary>Current payment provider status when available.</summary>
+    public string? ProviderStatus { get; set; }
 }
 
 /// <summary>DTO for creating a payment.</summary>
@@ -60,4 +64,6 @@ public class RefundDto
     public RefundStatus Status { get; set; }
     /// <summary>Gets or sets when refunded.</summary>
     public DateTime? RefundedAt { get; set; }
+    /// <summary>External provider refund ID when available.</summary>
+    public string? ProviderRefundId { get; set; }
 }

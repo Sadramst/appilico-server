@@ -5,13 +5,11 @@ using System.Text;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Appilico.Server.Business.DTOs.Auth;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.Interfaces;
-using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Constants;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Interfaces;
@@ -26,7 +24,6 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
-    private readonly AppDbContext _dbContext;
     private readonly IEmailService _emailService;
 
     /// <summary>Initializes a new instance of AuthService.</summary>
@@ -36,7 +33,6 @@ public class AuthService : IAuthService
         IMapper mapper,
         IConfiguration configuration,
         ILogger<AuthService> logger,
-        AppDbContext dbContext,
         IEmailService emailService)
     {
         _userManager = userManager;
@@ -44,7 +40,6 @@ public class AuthService : IAuthService
         _mapper = mapper;
         _configuration = configuration;
         _logger = logger;
-        _dbContext = dbContext;
         _emailService = emailService;
     }
 
@@ -313,7 +308,7 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        _dbContext.RefreshTokens.Add(refreshToken);
+        await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
         await _unitOfWork.SaveChangesAsync();
 
         return new AuthResponse
@@ -339,7 +334,6 @@ public class AuthService : IAuthService
 
     private async Task<RefreshToken?> FindRefreshTokenAsync(string token)
     {
-        return await _dbContext.RefreshTokens
-            .FirstOrDefaultAsync(rt => rt.Token == token);
+        return await _unitOfWork.RefreshTokens.GetByTokenAsync(token);
     }
 }

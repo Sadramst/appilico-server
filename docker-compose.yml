@@ -13,13 +13,44 @@ services:
       - JWT__Audience=Appilico.Client
       - JWT__ExpirationInMinutes=60
       - JWT__RefreshTokenExpirationInDays=7
+      - Swagger__Enabled=${SWAGGER_ENABLED:-true}
       - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
       - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
       - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - Stripe__Enabled=${STRIPE_ENABLED:-false}
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY:-}
+      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY:-}
+      - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET:-}
+      - Stripe__Currency=${STRIPE_CURRENCY:-aud}
+      - Stripe__StarterPriceId=${STRIPE_STARTER_PRICE_ID:-}
+      - Stripe__ProfessionalPriceId=${STRIPE_PROFESSIONAL_PRICE_ID:-}
+      - Stripe__EnterprisePriceId=${STRIPE_ENTERPRISE_PRICE_ID:-}
+      - Stripe__WebhookToleranceSeconds=${STRIPE_WEBHOOK_TOLERANCE_SECONDS:-300}
+      - AzureStorage__Enabled=${AZURE_STORAGE_ENABLED:-false}
+      - AzureStorage__ConnectionString=${AZURE_STORAGE_CONNECTION_STRING:-}
+      - AzureStorage__ContainerName=${AZURE_STORAGE_CONTAINER_NAME:-visuals}
+      - AzureStorage__MaxFileSizeBytes=${AZURE_STORAGE_MAX_FILE_SIZE_BYTES:-52428800}
+      - AzureStorage__SasExpiryMinutes=${AZURE_STORAGE_SAS_EXPIRY_MINUTES:-30}
+      - Email__Enabled=${EMAIL_ENABLED:-false}
+      - Email__SmtpHost=${EMAIL_SMTP_HOST:-}
+      - Email__SmtpPort=${EMAIL_SMTP_PORT:-587}
+      - Email__SmtpUser=${EMAIL_SMTP_USER:-}
+      - Email__SmtpPass=${EMAIL_SMTP_PASS:-}
+      - Email__FromEmail=${EMAIL_FROM_EMAIL:-noreply@appilico.com}
+      - Email__FromName=${EMAIL_FROM_NAME:-Appilico}
+      - Email__ClientBaseUrl=${EMAIL_CLIENT_BASE_URL:-https://appilico.com}
+      - Email__NotifyEmail=${EMAIL_NOTIFY_EMAIL:-info@appilico.com.au}
+      - Email__QueueCapacity=${EMAIL_QUEUE_CAPACITY:-100}
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - appilico-net
 

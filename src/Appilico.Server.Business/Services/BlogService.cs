@@ -1,68 +1,47 @@
 using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Appilico.Server.Business.DTOs.Blog;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.Interfaces;
-using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Entities;
+using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.Business.Services;
 
 /// <summary>Blog service implementation.</summary>
 public class BlogService : IBlogService
 {
-    private readonly AppDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<BlogService> _logger;
 
-    public BlogService(AppDbContext db, ILogger<BlogService> logger)
+    public BlogService(IUnitOfWork unitOfWork, ILogger<BlogService> logger)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<PagedResult<BlogPostDto>>> GetPostsAsync(string? category, int page, int pageSize)
     {
-        page = Math.Max(1, page);
-        pageSize = Math.Clamp(pageSize, 1, 50);
-
-        var query = _db.BlogPosts
-            .Where(p => !p.IsDeleted && p.IsPublished)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(category))
-            query = query.Where(p => p.Category == category);
-
-        var total = await query.CountAsync();
-        var posts = await query
-            .OrderByDescending(p => p.PublishedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var normalized = PaginationRequest.Normalize(page, pageSize);
+        var (posts, total) = await _unitOfWork.BlogPosts.GetPublishedAsync(category, normalized.Page, normalized.PageSize);
 
         return ApiResponse<PagedResult<BlogPostDto>>.SuccessResponse(
-            PagedResult<BlogPostDto>.Create(posts.Select(p => MapToDto(p)).ToList(), page, pageSize, total));
+            PagedResult<BlogPostDto>.Create(posts.Select(post => MapToDto(post)).ToList(), normalized.Page, normalized.PageSize, total));
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<BlogPostDto>> GetPostBySlugAsync(string slug)
     {
-        var post = await _db.BlogPosts
-            .FirstOrDefaultAsync(p => p.Slug == slug && !p.IsDeleted && p.IsPublished);
+        var post = await _unitOfWork.BlogPosts.GetPublishedBySlugAsync(slug);
 
         if (post == null)
             return ApiResponse<BlogPostDto>.FailResponse("Blog post not found");
 
         var dto = MapToDto(post);
 
-        // Add up to 2 related posts (same category, different slug)
-        dto.RelatedPosts = (await _db.BlogPosts
-            .Where(p => p.Category == post.Category && p.Slug != slug && !p.IsDeleted && p.IsPublished)
-            .OrderByDescending(p => p.PublishedAt)
-            .Take(2)
-            .ToListAsync())
-            .Select(p => MapToDto(p, includeRelated: false))
+        dto.RelatedPosts = (await _unitOfWork.BlogPosts.GetRelatedPublishedAsync(post.Category, slug, 2))
+            .Select(relatedPost => MapToDto(relatedPost, includeRelated: false))
             .ToList();
 
         return ApiResponse<BlogPostDto>.SuccessResponse(dto);
@@ -91,8 +70,8 @@ public class BlogService : IBlogService
             IsPublished = request.IsPublished
         };
 
-        _db.BlogPosts.Add(post);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.BlogPosts.AddAsync(post);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Blog post created: {Slug}", slug);
         return ApiResponse<BlogPostDto>.SuccessResponse(MapToDto(post), "Blog post created");
@@ -101,7 +80,7 @@ public class BlogService : IBlogService
     /// <inheritdoc/>
     public async Task<ApiResponse<BlogPostDto>> UpdatePostAsync(Guid id, UpdateBlogPostRequest request)
     {
-        var post = await _db.BlogPosts.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+        var post = await _unitOfWork.BlogPosts.GetEditableByIdAsync(id);
         if (post == null) return ApiResponse<BlogPostDto>.FailResponse("Blog post not found");
 
         if (request.Title != null)
@@ -128,32 +107,32 @@ public class BlogService : IBlogService
                 post.PublishedAt = DateTime.UtcNow;
         }
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<BlogPostDto>.SuccessResponse(MapToDto(post), "Blog post updated");
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<bool>> DeletePostAsync(Guid id)
     {
-        var post = await _db.BlogPosts.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+        var post = await _unitOfWork.BlogPosts.GetEditableByIdAsync(id);
         if (post == null) return ApiResponse<bool>.FailResponse("Blog post not found");
 
         post.IsDeleted = true;
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<bool>.SuccessResponse(true, "Blog post deleted");
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<BlogPostDto>> PublishPostAsync(Guid id)
     {
-        var post = await _db.BlogPosts.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+        var post = await _unitOfWork.BlogPosts.GetEditableByIdAsync(id);
         if (post == null) return ApiResponse<BlogPostDto>.FailResponse("Blog post not found");
 
         post.IsPublished = true;
         if (post.PublishedAt == null)
             post.PublishedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<BlogPostDto>.SuccessResponse(MapToDto(post), "Blog post published");
     }
 

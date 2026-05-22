@@ -52,7 +52,11 @@ public class VisualsController : BaseApiController
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
         var result = await _visualService.DownloadAsync(id, GetUserId(), ipAddress);
         if (!result.Success)
+        {
+            if (result.Message.Contains("unavailable", StringComparison.OrdinalIgnoreCase))
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, result);
             return result.Message.Contains("Upgrade") ? Forbid() : NotFound();
+        }
         return Ok(result);
     }
 

@@ -16,7 +16,7 @@ public interface ICustomerService
     Task<ApiResponse<CustomerDto>> GetByUserIdAsync(string userId);
 
     /// <summary>Updates a customer.</summary>
-    Task<ApiResponse<CustomerDto>> UpdateAsync(Guid id, UpdateCustomerRequest request, string userId);
+    Task<ApiResponse<CustomerDto>> UpdateAsync(Guid id, UpdateCustomerRequest request, string userId, bool canManageMembershipTier = false);
 
     /// <summary>Gets customer loyalty info.</summary>
     Task<ApiResponse<CustomerLoyaltyDto>> GetLoyaltyAsync(Guid customerId);

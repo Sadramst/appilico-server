@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Appilico.Server.Business.DTOs.Review;
 using Appilico.Server.Business.Interfaces;
 using Appilico.Server.Domain.Constants;
+using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.API.Controllers;
 
@@ -11,12 +12,14 @@ public class ReviewsController : BaseApiController
 {
     private readonly IReviewService _reviewService;
     private readonly ICustomerService _customerService;
+    private readonly IAccessControlService _accessControl;
 
     /// <summary>Initializes ReviewsController.</summary>
-    public ReviewsController(IReviewService reviewService, ICustomerService customerService)
+    public ReviewsController(IReviewService reviewService, ICustomerService customerService, IAccessControlService accessControl)
     {
         _reviewService = reviewService;
         _customerService = customerService;
+        _accessControl = accessControl;
     }
 
     /// <summary>Get reviews for a product.</summary>
@@ -32,7 +35,19 @@ public class ReviewsController : BaseApiController
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _reviewService.GetByIdAsync(id);
-        return result.Success ? Ok(result) : NotFound(result);
+        if (!result.Success)
+            return NotFound(result);
+
+        if (result.Data!.IsApproved)
+            return Ok(result);
+
+        if (!HasAuthenticatedUser())
+            return NotFound(result);
+
+        if (!await _accessControl.CanAccessReviewAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
+        return Ok(result);
     }
 
     /// <summary>Create review.</summary>
@@ -52,6 +67,9 @@ public class ReviewsController : BaseApiController
     [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateReviewRequest request)
     {
+        if (!await _accessControl.CanAccessReviewAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
         var result = await _reviewService.UpdateAsync(id, request, GetUserId());
         return result.Success ? Ok(result) : BadRequest(result);
     }
@@ -61,6 +79,9 @@ public class ReviewsController : BaseApiController
     [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
+        if (!await _accessControl.CanAccessReviewAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
         var result = await _reviewService.DeleteAsync(id, GetUserId());
         return result.Success ? Ok(result) : NotFound(result);
     }

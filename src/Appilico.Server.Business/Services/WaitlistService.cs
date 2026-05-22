@@ -1,25 +1,24 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.DTOs.Waitlist;
 using Appilico.Server.Business.Interfaces;
-using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Entities;
+using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.Business.Services;
 
 /// <summary>Waitlist service implementation.</summary>
 public class WaitlistService : IWaitlistService
 {
-    private readonly AppDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<WaitlistService> _logger;
-    private readonly IEmailService _emailService;
+    private readonly IEmailWorkQueue _emailWorkQueue;
 
-    public WaitlistService(AppDbContext db, ILogger<WaitlistService> logger, IEmailService emailService)
+    public WaitlistService(IUnitOfWork unitOfWork, ILogger<WaitlistService> logger, IEmailWorkQueue emailWorkQueue)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _logger = logger;
-        _emailService = emailService;
+        _emailWorkQueue = emailWorkQueue;
     }
 
     /// <inheritdoc/>
@@ -29,8 +28,8 @@ public class WaitlistService : IWaitlistService
             return ApiResponse<WaitlistSubscribeResponse>.FailResponse("Email is required");
 
         var email = request.Email.Trim().ToLowerInvariant();
-        var existing = await _db.WaitlistEntries.FirstOrDefaultAsync(w => w.Email == email && !w.IsDeleted);
-        var totalCount = await _db.WaitlistEntries.CountAsync(w => !w.IsDeleted);
+        var existing = await _unitOfWork.WaitlistEntries.GetByEmailAsync(email);
+        var totalCount = await _unitOfWork.WaitlistEntries.CountActiveAsync();
 
         if (existing != null)
         {
@@ -54,19 +53,12 @@ public class WaitlistService : IWaitlistService
             IPAddress = ipAddress
         };
 
-        _db.WaitlistEntries.Add(entry);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.WaitlistEntries.AddAsync(entry);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Waitlist entry added: {Email} at position {Position}", email, position);
 
-        try
-        {
-            await _emailService.SendWaitlistConfirmationAsync(email, position);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to send waitlist confirmation to {Email}", email);
-        }
+        await _emailWorkQueue.QueueAsync((emailService, _) => emailService.SendWaitlistConfirmationAsync(email, position));
 
         return ApiResponse<WaitlistSubscribeResponse>.SuccessResponse(new WaitlistSubscribeResponse
         {
@@ -79,20 +71,15 @@ public class WaitlistService : IWaitlistService
     /// <inheritdoc/>
     public async Task<ApiResponse<int>> GetCountAsync()
     {
-        var count = await _db.WaitlistEntries.CountAsync(w => !w.IsDeleted);
+        var count = await _unitOfWork.WaitlistEntries.CountActiveAsync();
         return ApiResponse<int>.SuccessResponse(count);
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<PagedResult<WaitlistEntryDto>>> GetAdminListAsync(int page, int pageSize, bool? isNotified)
     {
-        var q = _db.WaitlistEntries.Where(w => !w.IsDeleted);
-        if (isNotified.HasValue) q = q.Where(w => w.IsNotified == isNotified.Value);
-        var total = await q.CountAsync();
-        var items = await q.OrderBy(w => w.Position)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var normalized = PaginationRequest.Normalize(page, pageSize, maxPageSize: 100);
+        var (items, total) = await _unitOfWork.WaitlistEntries.GetAdminPageAsync(normalized.Page, normalized.PageSize, isNotified);
 
         var dtos = items.Select(w => new WaitlistEntryDto
         {
@@ -108,18 +95,18 @@ public class WaitlistService : IWaitlistService
         }).ToList();
 
         return ApiResponse<PagedResult<WaitlistEntryDto>>.SuccessResponse(
-            PagedResult<WaitlistEntryDto>.Create(dtos, page, pageSize, total));
+            PagedResult<WaitlistEntryDto>.Create(dtos, normalized.Page, normalized.PageSize, total));
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<WaitlistEntryDto>> NotifyAsync(Guid id)
     {
-        var entry = await _db.WaitlistEntries.FirstOrDefaultAsync(w => w.Id == id && !w.IsDeleted);
+        var entry = await _unitOfWork.WaitlistEntries.GetActiveByIdAsync(id);
         if (entry == null) return ApiResponse<WaitlistEntryDto>.FailResponse("Waitlist entry not found");
 
         entry.IsNotified = true;
         entry.NotifiedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return ApiResponse<WaitlistEntryDto>.SuccessResponse(new WaitlistEntryDto
         {

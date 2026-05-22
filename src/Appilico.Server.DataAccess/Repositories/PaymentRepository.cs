@@ -21,4 +21,20 @@ public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
             .Where(p => p.OrderId == orderId)
             .ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<Payment?> GetWithRefundsAsync(Guid id)
+    {
+        return await _dbSet
+            .Include(payment => payment.Refunds)
+            .FirstOrDefaultAsync(payment => payment.Id == id);
+    }
+
+    /// <inheritdoc/>
+    public async Task<Payment?> GetByTransactionIdAsync(string transactionId)
+    {
+        return await _dbSet
+            .Include(payment => payment.Refunds)
+            .FirstOrDefaultAsync(payment => payment.TransactionId == transactionId);
+    }
 }

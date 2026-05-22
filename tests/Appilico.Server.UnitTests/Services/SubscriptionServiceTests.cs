@@ -1,11 +1,16 @@
 using FluentAssertions;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Appilico.Server.Business.DTOs.Subscription;
+using Appilico.Server.Business.Interfaces;
+using Appilico.Server.Business.Options;
 using Appilico.Server.Business.Services;
 using Appilico.Server.DataAccess.Data;
+using Appilico.Server.DataAccess.Repositories;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Enums;
 
@@ -15,6 +20,7 @@ public class SubscriptionServiceTests : IDisposable
 {
     private readonly AppDbContext _db;
     private readonly Mock<UserManager<AppUser>> _userManagerMock;
+    private readonly Mock<IStripeService> _stripeServiceMock;
     private readonly SubscriptionService _sut;
 
     public SubscriptionServiceTests()
@@ -26,9 +32,15 @@ public class SubscriptionServiceTests : IDisposable
 
         var store = new Mock<IUserStore<AppUser>>();
         _userManagerMock = new Mock<UserManager<AppUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        _stripeServiceMock = new Mock<IStripeService>();
 
         var logger = new Mock<ILogger<SubscriptionService>>().Object;
-        _sut = new SubscriptionService(_userManagerMock.Object, _db, logger);
+        _sut = new SubscriptionService(
+            _userManagerMock.Object,
+            new UnitOfWork(_db),
+            _stripeServiceMock.Object,
+            Microsoft.Extensions.Options.Options.Create(new StripeOptions { Enabled = false }),
+            logger);
     }
 
     public void Dispose() => _db.Dispose();
@@ -75,42 +87,122 @@ public class SubscriptionServiceTests : IDisposable
     // ─── UpgradeAsync ────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task UpgradeAsync_ValidTier_UpdatesUserAndCreatesSubscription()
+    public async Task UpgradeAsync_FreeTier_AllowsDowngradeAndCreatesSubscription()
     {
-        var user = CreateUser("user-upgrade");
+        var user = CreateUser("user-upgrade", SubscriptionTier.Starter);
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
         _userManagerMock.Setup(m => m.UpdateAsync(It.IsAny<AppUser>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _sut.UpgradeAsync("user-upgrade", new UpgradeSubscriptionRequest { Plan = "Starter" });
+        var result = await _sut.UpgradeAsync("user-upgrade", new UpgradeSubscriptionRequest { Plan = "Free" });
 
         result.Success.Should().BeTrue();
-        result.Data!.Tier.Should().Be("Starter");
+        result.Data!.Tier.Should().Be("Free");
 
         var subscription = await _db.Subscriptions.FirstOrDefaultAsync(s => s.UserId == "user-upgrade");
         subscription.Should().NotBeNull();
-        subscription!.Tier.Should().Be(SubscriptionTier.Starter);
+        subscription!.Tier.Should().Be(SubscriptionTier.Free);
         subscription.Status.Should().Be(SubscriptionStatus.Active);
     }
 
     [Fact]
-    public async Task UpgradeAsync_CreatesHistoryRecord()
+    public async Task UpgradeAsync_FreeTier_CreatesHistoryRecord()
     {
-        var user = CreateUser("user-history");
+        var user = CreateUser("user-history", SubscriptionTier.Professional);
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
         _userManagerMock.Setup(m => m.UpdateAsync(It.IsAny<AppUser>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        await _sut.UpgradeAsync("user-history", new UpgradeSubscriptionRequest { Plan = "Professional" });
+        await _sut.UpgradeAsync("user-history", new UpgradeSubscriptionRequest { Plan = "Free" });
 
         var history = await _db.SubscriptionHistories.FirstOrDefaultAsync(h => h.UserId == "user-history");
         history.Should().NotBeNull();
-        history!.ToTier.Should().Be(SubscriptionTier.Professional);
-        history.FromTier.Should().Be(SubscriptionTier.Free);
+        history!.ToTier.Should().Be(SubscriptionTier.Free);
+        history.FromTier.Should().Be(SubscriptionTier.Professional);
+    }
+
+    [Fact]
+    public async Task UpgradeAsync_PaidTier_ReturnsFailureWithoutChangingUser()
+    {
+        var user = CreateUser("user-paid", SubscriptionTier.Free);
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.UpgradeAsync("user-paid", new UpgradeSubscriptionRequest { Plan = "Starter" });
+
+        result.Success.Should().BeFalse();
+        user.SubscriptionTier.Should().Be(SubscriptionTier.Free);
+        (await _db.Subscriptions.AnyAsync(s => s.UserId == "user-paid")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpgradeAsync_PaidTier_ReturnsClientSecretWithoutGrantingTierUntilProviderActive()
+    {
+        var user = CreateUser("user-stripe", SubscriptionTier.Free);
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var sut = new SubscriptionService(
+            _userManagerMock.Object,
+            new UnitOfWork(_db),
+            _stripeServiceMock.Object,
+            Microsoft.Extensions.Options.Options.Create(new StripeOptions
+            {
+                Enabled = true,
+                SecretKey = "sk_test",
+                PublishableKey = "pk_test",
+                WebhookSecret = "whsec_test",
+                StarterPriceId = "price_starter",
+                ProfessionalPriceId = "price_professional",
+                EnterprisePriceId = "price_enterprise"
+            }),
+            new Mock<ILogger<SubscriptionService>>().Object);
+
+        _stripeServiceMock
+            .Setup(s => s.CreateSubscriptionAsync(It.Is<StripeSubscriptionRequest>(request => request.PriceId == "price_starter"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new StripeSubscriptionResult("cus_123", "sub_123", "price_starter", "incomplete", "client_secret", null));
+
+        var result = await sut.UpgradeAsync("user-stripe", new UpgradeSubscriptionRequest { Plan = "Starter" });
+
+        result.Success.Should().BeTrue();
+        result.Data!.RequiresPayment.Should().BeTrue();
+        result.Data.PaymentClientSecret.Should().Be("client_secret");
+        result.Data.PendingTier.Should().Be("Starter");
+        user.SubscriptionTier.Should().Be(SubscriptionTier.Free);
+
+        var subscription = await _db.Subscriptions.SingleAsync(s => s.UserId == "user-stripe");
+        subscription.Status.Should().Be(SubscriptionStatus.Incomplete);
+        subscription.StripeSubscriptionId.Should().Be("sub_123");
+    }
+
+    [Fact]
+    public async Task HandleStripeWebhookAsync_DuplicateEvent_IsIdempotent()
+    {
+        _db.ExternalWebhookEvents.Add(new ExternalWebhookEvent
+        {
+            Provider = "stripe",
+            EventId = "evt_duplicate",
+            EventType = "payment_intent.succeeded",
+            PayloadHash = "hash",
+            ProcessedAt = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+
+        using var json = JsonDocument.Parse("{}");
+        _stripeServiceMock
+            .Setup(s => s.ConstructWebhookEvent("{}", "sig"))
+            .Returns(new StripeWebhookEvent("evt_duplicate", "payment_intent.succeeded", "hash", json.RootElement.Clone()));
+
+        var result = await _sut.HandleStripeWebhookAsync("{}", "sig");
+
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("Webhook already processed");
+        var count = await _db.ExternalWebhookEvents.CountAsync(e => e.EventId == "evt_duplicate");
+        count.Should().Be(1);
     }
 
     [Fact]

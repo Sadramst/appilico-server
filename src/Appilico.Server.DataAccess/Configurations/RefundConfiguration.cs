@@ -15,6 +15,7 @@ public class RefundConfiguration : IEntityTypeConfiguration<Refund>
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Amount).HasColumnType("numeric(18,2)");
         builder.Property(r => r.Reason).HasMaxLength(1000);
+        builder.Property(r => r.ProviderRefundId).HasMaxLength(200);
 
         builder.HasOne(r => r.Order)
             .WithMany()

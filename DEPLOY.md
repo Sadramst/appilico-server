@@ -1,5 +1,13 @@
 # Appilico Server — VPS Deployment Guide
 
+For the current CI/deployment checklist, migration notes, provider environment
+variables, health checks, and rollback process, also see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+> **Production source check required:** During the Phase 0 audit, the public
+> `https://api.appilico.com` Swagger document appeared to describe a different
+> API than this repository. Before deploying, verify the VPS checkout remote,
+> branch, running container image, and public API surface match this repo.
+
 ## Prerequisites
 - VPS with Ubuntu 22.04+ (or similar)
 - Docker & Docker Compose installed
@@ -30,13 +38,24 @@ Fill in your real values:
 POSTGRES_USER=appilico
 POSTGRES_PASSWORD=YourStr0ngP@ssw0rd!Here
 DB_CONNECTION_STRING=Host=postgres;Database=appilicodb;Username=appilico;Password=YourStr0ngP@ssw0rd!Here;
-JWT_SECRET=YourSuperSecretKeyThatIsAtLeast32CharactersLong!ChangeMe
+JWT_SECRET=CHANGE_ME_AT_LEAST_32_CHARS_RANDOM_STRING
+SWAGGER_ENABLED=false
+STRIPE_ENABLED=false
+AZURE_STORAGE_ENABLED=false
+EMAIL_ENABLED=false
 CLOUDINARY_CLOUD_NAME=your-actual-cloud-name
 CLOUDINARY_API_KEY=your-actual-api-key
 CLOUDINARY_API_SECRET=your-actual-api-secret
+STRIPE_CURRENCY=aud
+STRIPE_STARTER_PRICE_ID=price_...
+STRIPE_PROFESSIONAL_PRICE_ID=price_...
+STRIPE_ENTERPRISE_PRICE_ID=price_...
+AZURE_STORAGE_CONTAINER_NAME=visuals
+EMAIL_NOTIFY_EMAIL=info@appilico.com.au
 ```
 
 **Important:** The `POSTGRES_PASSWORD` in `DB_CONNECTION_STRING` must match the `POSTGRES_PASSWORD` value.
+Do not commit the filled `.env` file or paste it into logs/chats.
 
 ## Step 3: Open firewall ports
 
@@ -106,8 +125,8 @@ curl -I https://api.appilico.com/swagger/index.html
 ```
 
 Open in browser:
-- ✅ https://api.appilico.com/swagger/index.html → Swagger UI
-- ✅ https://api.appilico.com/api/products → Products JSON
+- https://api.appilico.com/api/products -> Products JSON
+- Swagger is disabled by default in Production. Temporarily set `SWAGGER_ENABLED=true` only when you intentionally need public Swagger.
 
 ## Step 8: Set up auto-renewal for SSL
 
@@ -134,6 +153,7 @@ Your docker-compose.yml was outdated. Pull the latest code: `git pull`
 - Nginx isn't running: `docker compose logs nginx`
 
 ### Swagger not loading
+- Production Swagger is disabled unless `SWAGGER_ENABLED=true`.
 - Check backend is running: `docker compose logs backend --tail 20`
 - Check nginx is proxying: `docker compose logs nginx --tail 20`
 
@@ -154,3 +174,22 @@ git pull
 docker compose build backend
 docker compose up -d
 ```
+
+### Run verification before deploy
+```bash
+dotnet test Appilico.Server.sln --no-restore
+dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+```
+
+The dependency scan should report no vulnerable packages before deploying.
+
+Optional live API tests are excluded from normal runs. To run them deliberately:
+```powershell
+$env:APPILICO_API_BASE_URL="https://api.appilico.com"
+dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTests.csproj -p:RunLiveApiTests=true
+```
+
+### Secret rotation
+If this repo history or deployment logs ever contained real secrets, rotate the
+database password, JWT secret, Cloudinary credentials, VPS deploy secret, and any
+development database credentials before deploying. See [SECURITY.md](SECURITY.md).

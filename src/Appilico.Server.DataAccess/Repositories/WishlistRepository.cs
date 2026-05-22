@@ -29,4 +29,12 @@ public class WishlistRepository : GenericRepository<Wishlist>, IWishlistReposito
     {
         return await _dbSet.FirstOrDefaultAsync(w => w.CustomerId == customerId && w.ProductId == productId);
     }
+
+    /// <inheritdoc/>
+    public async Task<Wishlist?> GetSoftDeletedByCustomerAndProductAsync(Guid customerId, Guid productId)
+    {
+        return await _dbSet
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(w => w.CustomerId == customerId && w.ProductId == productId && w.IsDeleted);
+    }
 }

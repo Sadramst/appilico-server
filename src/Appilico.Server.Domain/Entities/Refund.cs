@@ -26,6 +26,9 @@ public class Refund : BaseAuditableEntity
     /// <summary>Gets or sets when the refund was processed.</summary>
     public DateTime? RefundedAt { get; set; }
 
+    /// <summary>External provider refund ID.</summary>
+    public string? ProviderRefundId { get; set; }
+
     /// <summary>Navigation property for the order.</summary>
     public virtual Order Order { get; set; } = null!;
 

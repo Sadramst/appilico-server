@@ -26,6 +26,11 @@ public class CurrentSubscriptionDto
     public DateTime? NextBillingDate { get; set; }
     public decimal Price { get; set; }
     public List<string> Features { get; set; } = new();
+    public bool RequiresPayment { get; set; }
+    public string? PaymentClientSecret { get; set; }
+    public string? PendingTier { get; set; }
+    public string? ProviderStatus { get; set; }
+    public string? ProviderSubscriptionId { get; set; }
 }
 
 /// <summary>Request DTO for upgrading a subscription.</summary>

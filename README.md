@@ -1,10 +1,10 @@
 # Appilico E-Commerce Backend
 
-Full-featured e-commerce backend API built with ASP.NET Core 8, Entity Framework Core 8, and SQL Server.
+Full-featured e-commerce backend API built with ASP.NET Core 8, Entity Framework Core 8, and PostgreSQL.
 
 ## Architecture
 
-Clean layered architecture:
+Clean layered architecture with one-way project dependencies:
 
 ```
 Appilico.Server.sln
@@ -19,16 +19,23 @@ Appilico.Server.sln
     └── Appilico.Server.DataAccess.Tests
 ```
 
+`Appilico.Server.Business` depends on Domain abstractions only; it does not
+reference DataAccess or `AppDbContext`. The API project is the composition root
+and wires DataAccess implementations at startup. See [ARCHITECTURE.md](ARCHITECTURE.md)
+for the dependency map, repository pattern, and modernization notes.
+
 ## Tech Stack
 
 - **Runtime**: .NET 8 / ASP.NET Core 8
-- **ORM**: Entity Framework Core 8 (SQL Server)
+- **ORM**: Entity Framework Core 8 (PostgreSQL via Npgsql)
 - **Auth**: ASP.NET Identity + JWT Bearer + Refresh Tokens
 - **Validation**: FluentValidation
 - **Mapping**: AutoMapper
 - **Logging**: Serilog (Console + File)
 - **API Docs**: Swagger / Swashbuckle
 - **Rate Limiting**: AspNetCoreRateLimit
+- **Payments**: Stripe PaymentIntents, refunds, subscriptions, and webhooks
+- **Storage**: Local development storage or private Azure Blob Storage with SAS downloads
 - **Testing**: xUnit, Moq, FluentAssertions
 - **Containerization**: Docker + Docker Compose
 
@@ -44,19 +51,20 @@ Appilico.Server.sln
 - **Discounts**: Code-based, percentage/fixed, validation
 - **Vouchers**: Code-based, validation, redemption tracking
 - **Special Offers**: Time-based offers with product associations
-- **Payments**: Process payments, refunds
+- **Payments**: Stripe-backed card/debit PaymentIntents, offline pending payments, provider-confirmed refunds
 - **Reviews**: Product reviews with approval workflow
 - **Wishlist**: Add/remove products
 - **Inventory**: Stock adjustments, low-stock alerts, transaction history
 - **Dashboard**: Sales summary, top products, revenue charts, customer stats
 - **Settings**: Key-value app settings with grouping
+- **Operations**: `/health/live`, `/health/ready`, correlation IDs, CI build/test/package scan
 
 ## Getting Started
 
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [SQL Server](https://www.microsoft.com/sql-server) (or Docker)
+- [PostgreSQL](https://www.postgresql.org/) (or Docker)
 
 ### Local Development
 
@@ -67,8 +75,8 @@ cd server
 # Restore packages
 dotnet restore
 
-# Update connection string in appsettings.json
-# Default: Server=localhost;Database=AppilicoDB;Trusted_Connection=True;TrustServerCertificate=True;
+# Update connection string via user secrets, environment variables, or appsettings.Development.json
+# Example: Host=localhost;Database=appilicodb_dev;Username=appilico;Password=development-only-password
 
 # Run database migrations
 dotnet ef database update --project src/Appilico.Server.DataAccess --startup-project src/Appilico.Server.API
@@ -77,7 +85,13 @@ dotnet ef database update --project src/Appilico.Server.DataAccess --startup-pro
 dotnet run --project src/Appilico.Server.API
 ```
 
-The API will be available at `https://localhost:5001` with Swagger UI at `/swagger`.
+The API will be available at the configured ASP.NET Core URL. Swagger is enabled in Development and disabled by default in Production unless `Swagger:Enabled=true`.
+
+Health endpoints:
+
+- `GET /health/live` for container/process liveness.
+- `GET /health/ready` for database and configured integration readiness.
+- `GET /health` remains available for backward-compatible health checks.
 
 ### Docker
 
@@ -91,7 +105,11 @@ docker-compose up -d
 ### Run Tests
 
 ```bash
-dotnet test
+dotnet test Appilico.Server.sln --no-restore
+
+# Optional live-server tests; requires a running API and is disabled by default
+$env:APPILICO_API_BASE_URL="https://api.appilico.com"
+dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTests.csproj -p:RunLiveApiTests=true
 ```
 
 ## Default Seed Accounts
@@ -101,6 +119,19 @@ dotnet test
 | Admin    | admin@appilico.com     | Admin@123!     |
 | Manager  | manager@appilico.com   | Manager@123!   |
 | Customer | customer@appilico.com  | Customer@123!  |
+
+Some seed data uses numbered customer accounts such as `customer1@appilico.com` for integration scenarios.
+
+## Production Safety
+
+- Production startup validates the database connection string and JWT settings.
+- Stripe, Azure Blob Storage, SMTP email, and production Swagger are disabled unless explicitly enabled and configured.
+- Stripe card/debit payments create pending local payments and require client confirmation plus webhook settlement before an order is marked paid.
+- Stripe refunds are requested from the provider before local refund/payment/order state is changed.
+- Paid subscriptions are created as provider-backed subscriptions and do not grant paid access until Stripe reports an active/trialing subscription.
+- Azure Blob visual downloads use private blobs with short-lived SAS URLs.
+- Contact and waitlist emails are queued in-process after persistence succeeds; use a durable queue later if email delivery must survive process restarts.
+- See [SECURITY.md](SECURITY.md) before deploying if this repository history may contain exposed secrets.
 
 ## API Endpoints
 
@@ -158,12 +189,25 @@ dotnet test
 
 ## Project Patterns
 
-- **Repository + Unit of Work**: All data access through `IUnitOfWork`
+- **Repository + Unit of Work**: Business services use Domain repository abstractions through `IUnitOfWork`
 - **Soft Delete**: `IsDeleted` flag on all entities
 - **Audit Trail**: `CreatedAt`, `UpdatedAt`, `CreatedBy`, `UpdatedBy`
 - **API Response Wrapper**: `ApiResponse<T>` with `Success`, `Message`, `Data`, `Pagination`
 - **Global Exception Handling**: Middleware catches all unhandled exceptions
 - **Role-Based Authorization**: Admin, Manager, Customer roles
+
+## Dependency Health
+
+The normal package health check is:
+
+```bash
+dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+dotnet list Appilico.Server.sln package --outdated --highest-minor
+```
+
+As of the Phase 2/3 modernization pass, there are no vulnerable packages and no
+available patch/minor updates. Deferred legacy migrations are documented in
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## License
 

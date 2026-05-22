@@ -6,6 +6,7 @@ using Appilico.Server.Business.DTOs.Waitlist;
 using Appilico.Server.Business.Interfaces;
 using Appilico.Server.Business.Services;
 using Appilico.Server.DataAccess.Data;
+using Appilico.Server.DataAccess.Repositories;
 using Appilico.Server.Domain.Entities;
 
 namespace Appilico.Server.UnitTests.Services;
@@ -14,6 +15,7 @@ public class WaitlistServiceTests : IDisposable
 {
     private readonly AppDbContext _db;
     private readonly Mock<IEmailService> _emailMock;
+    private readonly Mock<IEmailWorkQueue> _emailQueueMock;
     private readonly WaitlistService _sut;
 
     public WaitlistServiceTests()
@@ -23,10 +25,14 @@ public class WaitlistServiceTests : IDisposable
             .Options;
         _db = new AppDbContext(options);
         _emailMock = new Mock<IEmailService>();
-                _emailMock.Setup(e => e.SendWaitlistConfirmationAsync(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
+        _emailMock.Setup(e => e.SendWaitlistConfirmationAsync(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
+        _emailQueueMock = new Mock<IEmailWorkQueue>();
+        _emailQueueMock
+            .Setup(q => q.QueueAsync(It.IsAny<EmailWorkItem>(), It.IsAny<CancellationToken>()))
+            .Returns<EmailWorkItem, CancellationToken>((workItem, cancellationToken) => new ValueTask(workItem(_emailMock.Object, cancellationToken)));
 
         var logger = new Mock<ILogger<WaitlistService>>().Object;
-        _sut = new WaitlistService(_db, logger, _emailMock.Object);
+        _sut = new WaitlistService(new UnitOfWork(_db), logger, _emailQueueMock.Object);
     }
 
     public void Dispose() => _db.Dispose();

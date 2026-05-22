@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Appilico.Server.Business.DTOs.Order;
 using Appilico.Server.Business.Interfaces;
 using Appilico.Server.Domain.Constants;
+using Appilico.Server.Domain.Interfaces;
 
 namespace Appilico.Server.API.Controllers;
 
@@ -12,12 +13,14 @@ public class OrdersController : BaseApiController
 {
     private readonly IOrderService _orderService;
     private readonly ICustomerService _customerService;
+    private readonly IAccessControlService _accessControl;
 
     /// <summary>Initializes OrdersController.</summary>
-    public OrdersController(IOrderService orderService, ICustomerService customerService)
+    public OrdersController(IOrderService orderService, ICustomerService customerService, IAccessControlService accessControl)
     {
         _orderService = orderService;
         _customerService = customerService;
+        _accessControl = accessControl;
     }
 
     /// <summary>Get all orders (admin).</summary>
@@ -33,6 +36,9 @@ public class OrdersController : BaseApiController
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
+        if (!await _accessControl.CanAccessOrderAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
         var result = await _orderService.GetByIdAsync(id);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -74,6 +80,9 @@ public class OrdersController : BaseApiController
     [HttpGet("{id:guid}/history")]
     public async Task<IActionResult> GetStatusHistory(Guid id)
     {
+        if (!await _accessControl.CanAccessOrderAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
         var result = await _orderService.GetStatusHistoryAsync(id);
         return Ok(result);
     }
@@ -82,6 +91,9 @@ public class OrdersController : BaseApiController
     [HttpPost("{id:guid}/cancel")]
     public async Task<IActionResult> Cancel(Guid id)
     {
+        if (!await _accessControl.CanAccessOrderAsync(GetUserId(), IsPrivilegedUser(), id))
+            return Forbid();
+
         var result = await _orderService.CancelAsync(id, GetUserId());
         return result.Success ? Ok(result) : BadRequest(result);
     }

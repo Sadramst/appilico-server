@@ -1,24 +1,30 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+using Appilico.Server.Business.Exceptions;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.DTOs.Visual;
 using Appilico.Server.Business.Interfaces;
-using Appilico.Server.DataAccess.Data;
 using Appilico.Server.Domain.Entities;
 using Appilico.Server.Domain.Enums;
+using Appilico.Server.Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace Appilico.Server.Business.Services;
 
 /// <summary>Visuals service implementation.</summary>
 public class VisualService : IVisualService
 {
-    private readonly AppDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly UserManager<AppUser> _userManager;
     private readonly IFileStorageService _storage;
+    private readonly ILogger<VisualService> _logger;
 
-    public VisualService(AppDbContext db, IFileStorageService storage)
+    public VisualService(IUnitOfWork unitOfWork, UserManager<AppUser> userManager, IFileStorageService storage, ILogger<VisualService> logger)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
+        _userManager = userManager;
         _storage = storage;
+        _logger = logger;
     }
 
     private static VisualDto MapList(Visual v) => new()
@@ -71,43 +77,37 @@ public class VisualService : IVisualService
     /// <inheritdoc/>
     public async Task<ApiResponse<List<VisualDto>>> GetAllAsync()
     {
-        var visuals = await _db.Visuals
-            .Where(v => v.IsActive && !v.IsDeleted)
-            .OrderBy(v => v.SortOrder)
-            .ToListAsync();
+        var visuals = await _unitOfWork.Visuals.GetActiveOrderedAsync();
         return ApiResponse<List<VisualDto>>.SuccessResponse(visuals.Select(MapList).ToList());
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<PagedResult<VisualDto>>> GetPagedAsync(VisualFilterQuery query)
     {
-        var q = _db.Visuals.Where(v => v.IsActive && !v.IsDeleted);
+        VisualCategory? category = null;
+        if (!string.IsNullOrWhiteSpace(query.Category) && Enum.TryParse<VisualCategory>(query.Category, true, out var categoryValue))
+            category = categoryValue;
 
-        if (!string.IsNullOrWhiteSpace(query.Category) &&
-            Enum.TryParse<VisualCategory>(query.Category, true, out var catEnum))
-            q = q.Where(v => v.Category == catEnum);
+        SubscriptionTier? requiredPlan = null;
+        if (!string.IsNullOrWhiteSpace(query.RequiredPlan) && Enum.TryParse<SubscriptionTier>(query.RequiredPlan, true, out var planValue))
+            requiredPlan = planValue;
 
-        if (!string.IsNullOrWhiteSpace(query.RequiredPlan) &&
-            Enum.TryParse<SubscriptionTier>(query.RequiredPlan, true, out var planEnum))
-            q = q.Where(v => v.RequiredPlan == planEnum);
-
-        if (!string.IsNullOrWhiteSpace(query.Search))
-            q = q.Where(v => v.Name.Contains(query.Search) || v.Description.Contains(query.Search));
-
-        var total = await q.CountAsync();
-        var items = await q.OrderBy(v => v.SortOrder)
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .ToListAsync();
+        var normalized = PaginationRequest.Normalize(query.Page, query.PageSize);
+        var (items, total) = await _unitOfWork.Visuals.GetPagedActiveAsync(
+            category,
+            requiredPlan,
+            query.Search,
+            normalized.Page,
+            normalized.PageSize);
 
         return ApiResponse<PagedResult<VisualDto>>.SuccessResponse(
-            PagedResult<VisualDto>.Create(items.Select(MapList).ToList(), query.Page, query.PageSize, total));
+            PagedResult<VisualDto>.Create(items.Select(MapList).ToList(), normalized.Page, normalized.PageSize, total));
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<VisualDetailDto>> GetByIdAsync(Guid id)
     {
-        var v = await _db.Visuals.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var v = await _unitOfWork.Visuals.GetVisibleByIdAsync(id);
         if (v == null) return ApiResponse<VisualDetailDto>.FailResponse("Visual not found");
         return ApiResponse<VisualDetailDto>.SuccessResponse(MapDetail(v));
     }
@@ -115,7 +115,7 @@ public class VisualService : IVisualService
     /// <inheritdoc/>
     public async Task<ApiResponse<VisualDetailDto>> GetBySlugAsync(string slug)
     {
-        var v = await _db.Visuals.FirstOrDefaultAsync(x => x.Slug == slug && !x.IsDeleted);
+        var v = await _unitOfWork.Visuals.GetVisibleBySlugAsync(slug);
         if (v == null) return ApiResponse<VisualDetailDto>.FailResponse("Visual not found");
         return ApiResponse<VisualDetailDto>.SuccessResponse(MapDetail(v));
     }
@@ -123,22 +123,31 @@ public class VisualService : IVisualService
     /// <inheritdoc/>
     public async Task<ApiResponse<VisualDownloadResponseDto>> DownloadAsync(Guid id, string userId, string ipAddress)
     {
-        var visual = await _db.Visuals.FirstOrDefaultAsync(v => v.Id == id && v.IsActive && !v.IsDeleted);
+        var visual = await _unitOfWork.Visuals.GetVisibleByIdAsync(id, requireActive: true);
         if (visual == null)
             return ApiResponse<VisualDownloadResponseDto>.FailResponse("Visual not found");
 
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             return ApiResponse<VisualDownloadResponseDto>.FailResponse("User not found");
 
-        // Check subscription tier
-        var appUser = user as Domain.Entities.AppUser;
-        if (appUser != null && appUser.SubscriptionTier < visual.RequiredPlan)
+        if (user.SubscriptionTier < visual.RequiredPlan)
             return ApiResponse<VisualDownloadResponseDto>.FailResponse(
                 $"Upgrade to {visual.RequiredPlan} required to download this visual");
 
-        // Log download
-        _db.VisualDownloads.Add(new VisualDownload
+        var fileUrl = visual.DemoUrl ?? $"/api/v1/visuals/{id}/file";
+        string presignedUrl;
+        try
+        {
+            presignedUrl = await _storage.GetPresignedUrlAsync(fileUrl, 30);
+        }
+        catch (Exception ex) when (ex is StorageProviderException or NotSupportedException)
+        {
+            _logger.LogWarning(ex, "Visual download rejected because storage is unavailable for visual {VisualId}", id);
+            return ApiResponse<VisualDownloadResponseDto>.FailResponse("Visual downloads are temporarily unavailable.");
+        }
+
+        await _unitOfWork.Visuals.AddDownloadAsync(new VisualDownload
         {
             VisualId = visual.Id,
             UserId = userId,
@@ -147,11 +156,7 @@ public class VisualService : IVisualService
         });
 
         visual.DownloadCount++;
-        await _db.SaveChangesAsync();
-
-        // Generate pre-signed URL (30 min) or stub
-        var fileUrl = visual.DemoUrl ?? $"/api/v1/visuals/{id}/file";
-        var presignedUrl = await _storage.GetPresignedUrlAsync(fileUrl, 30);
+        await _unitOfWork.SaveChangesAsync();
 
         return ApiResponse<VisualDownloadResponseDto>.SuccessResponse(new VisualDownloadResponseDto
         {
@@ -164,7 +169,7 @@ public class VisualService : IVisualService
     /// <inheritdoc/>
     public async Task<ApiResponse<VisualDetailDto>> CreateAsync(UpsertVisualRequest request)
     {
-        if (await _db.Visuals.AnyAsync(v => v.Slug == request.Slug))
+        if (await _unitOfWork.Visuals.SlugExistsAsync(request.Slug))
             return ApiResponse<VisualDetailDto>.FailResponse("A visual with this slug already exists");
 
         Enum.TryParse<VisualCategory>(request.Category, true, out var cat);
@@ -189,16 +194,19 @@ public class VisualService : IVisualService
             IsActive = request.IsActive
         };
 
-        _db.Visuals.Add(visual);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Visuals.AddAsync(visual);
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<VisualDetailDto>.SuccessResponse(MapDetail(visual));
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<VisualDetailDto>> UpdateAsync(Guid id, UpsertVisualRequest request)
     {
-        var visual = await _db.Visuals.FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+        var visual = await _unitOfWork.Visuals.GetVisibleByIdAsync(id);
         if (visual == null) return ApiResponse<VisualDetailDto>.FailResponse("Visual not found");
+
+        if (await _unitOfWork.Visuals.SlugExistsAsync(request.Slug, id))
+            return ApiResponse<VisualDetailDto>.FailResponse("A visual with this slug already exists");
 
         Enum.TryParse<VisualCategory>(request.Category, true, out var cat);
         Enum.TryParse<SubscriptionTier>(request.RequiredPlan, true, out var tier);
@@ -219,19 +227,19 @@ public class VisualService : IVisualService
         visual.SortOrder = request.SortOrder;
         visual.IsActive = request.IsActive;
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<VisualDetailDto>.SuccessResponse(MapDetail(visual));
     }
 
     /// <inheritdoc/>
     public async Task<ApiResponse<bool>> DeleteAsync(Guid id)
     {
-        var visual = await _db.Visuals.FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+        var visual = await _unitOfWork.Visuals.GetVisibleByIdAsync(id);
         if (visual == null) return ApiResponse<bool>.FailResponse("Visual not found");
 
         visual.IsDeleted = true;
         visual.IsActive = false;
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return ApiResponse<bool>.SuccessResponse(true);
     }
 }

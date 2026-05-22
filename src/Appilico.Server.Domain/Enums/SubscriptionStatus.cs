@@ -10,5 +10,8 @@ public enum SubscriptionStatus
     Cancelled = 1,
 
     /// <summary>Payment failed; subscription is past due.</summary>
-    PastDue = 2
+    PastDue = 2,
+
+    /// <summary>Subscription has been created but requires payment confirmation.</summary>
+    Incomplete = 3
 }

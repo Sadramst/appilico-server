@@ -50,6 +50,30 @@ public interface IUnitOfWork : IDisposable
     /// <summary>Gets the audit log repository.</summary>
     IAuditLogRepository AuditLogs { get; }
 
+    /// <summary>Gets the refresh token repository.</summary>
+    IRefreshTokenRepository RefreshTokens { get; }
+
+    /// <summary>Gets the blog post repository.</summary>
+    IBlogPostRepository BlogPosts { get; }
+
+    /// <summary>Gets the visual repository.</summary>
+    IVisualRepository Visuals { get; }
+
+    /// <summary>Gets the subscription repository.</summary>
+    ISubscriptionRepository Subscriptions { get; }
+
+    /// <summary>Gets the newsletter subscriber repository.</summary>
+    INewsletterSubscriberRepository NewsletterSubscribers { get; }
+
+    /// <summary>Gets the waitlist repository.</summary>
+    IWaitlistRepository WaitlistEntries { get; }
+
+    /// <summary>Gets the contact message repository.</summary>
+    IContactMessageRepository ContactMessages { get; }
+
+    /// <summary>Gets the external webhook event repository.</summary>
+    IExternalWebhookEventRepository ExternalWebhookEvents { get; }
+
     /// <summary>Saves all pending changes to the database.</summary>
     Task<int> SaveChangesAsync();
 

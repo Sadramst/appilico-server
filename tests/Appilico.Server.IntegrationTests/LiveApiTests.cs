@@ -19,7 +19,7 @@ public class LiveApiFixture : IAsyncLifetime
 
     public LiveApiFixture()
     {
-        BaseUrl = Environment.GetEnvironmentVariable("PRIMO_API_BASE_URL")
+        BaseUrl = Environment.GetEnvironmentVariable("APPILICO_API_BASE_URL")
                   ?? "http://localhost:5034";
     }
 
@@ -51,9 +51,9 @@ public class LiveApiCollection : ICollectionFixture<LiveApiFixture> { }
 
 /// <summary>
 /// Live API integration tests against a real running server.
-/// Set PRIMO_API_BASE_URL env var to target a specific server.
+/// Set APPILICO_API_BASE_URL env var to target a specific server.
 /// Defaults to http://localhost:5034 (local dev).
-/// Use https://appilico-server.onrender.com for deployed.
+/// Use https://api.appilico.com for deployed after verifying this repo is the production source.
 /// </summary>
 [Collection("LiveApi")]
 public class LiveApiTests

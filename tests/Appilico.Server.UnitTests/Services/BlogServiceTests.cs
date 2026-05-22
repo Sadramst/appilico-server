@@ -5,6 +5,7 @@ using Moq;
 using Appilico.Server.Business.DTOs.Blog;
 using Appilico.Server.Business.Services;
 using Appilico.Server.DataAccess.Data;
+using Appilico.Server.DataAccess.Repositories;
 using Appilico.Server.Domain.Entities;
 
 namespace Appilico.Server.UnitTests.Services;
@@ -21,7 +22,7 @@ public class BlogServiceTests : IDisposable
             .Options;
         _db = new AppDbContext(options);
         var logger = new Mock<ILogger<BlogService>>().Object;
-        _sut = new BlogService(_db, logger);
+        _sut = new BlogService(new UnitOfWork(_db), logger);
     }
 
     public void Dispose() => _db.Dispose();

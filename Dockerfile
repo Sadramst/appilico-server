@@ -24,7 +24,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& addgroup --system appgroup \
+	&& adduser --system --ingroup appgroup appuser
 
 # Copy published app
 COPY --from=build /app/publish .
@@ -38,5 +42,7 @@ USER appuser
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 ENV ASPNETCORE_ENVIRONMENT=Production
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD curl -fsS "http://localhost:${PORT:-8080}/health/live" || exit 1
 
 ENTRYPOINT ["dotnet", "Appilico.Server.API.dll"]

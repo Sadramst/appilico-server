@@ -5,6 +5,7 @@ using Moq;
 using Appilico.Server.Business.DTOs.Newsletter;
 using Appilico.Server.Business.Services;
 using Appilico.Server.DataAccess.Data;
+using Appilico.Server.DataAccess.Repositories;
 using Appilico.Server.Domain.Entities;
 
 namespace Appilico.Server.UnitTests.Services;
@@ -21,7 +22,7 @@ public class NewsletterServiceTests : IDisposable
             .Options;
         _db = new AppDbContext(options);
         var logger = new Mock<ILogger<NewsletterService>>().Object;
-        _sut = new NewsletterService(_db, logger);
+        _sut = new NewsletterService(new UnitOfWork(_db), logger);
     }
 
     public void Dispose() => _db.Dispose();

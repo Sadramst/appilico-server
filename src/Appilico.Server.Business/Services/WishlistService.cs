@@ -1,5 +1,4 @@
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Appilico.Server.Business.DTOs.Common;
 using Appilico.Server.Business.DTOs.Wishlist;
@@ -41,9 +40,7 @@ public class WishlistService : IWishlistService
             return ApiResponse<WishlistDto>.FailResponse("Product is already in your wishlist");
 
         // Check for soft-deleted entry and restore it instead of inserting a duplicate
-        var softDeleted = await _unitOfWork.Wishlists.GetQueryable()
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(w => w.CustomerId == customerId && w.ProductId == productId && w.IsDeleted);
+        var softDeleted = await _unitOfWork.Wishlists.GetSoftDeletedByCustomerAndProductAsync(customerId, productId);
 
         if (softDeleted != null)
         {

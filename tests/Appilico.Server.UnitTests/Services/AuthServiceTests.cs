@@ -21,6 +21,7 @@ public class AuthServiceTests
     private readonly Mock<UserManager<AppUser>> _userManagerMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ICustomerRepository> _customerRepoMock;
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
     private readonly Mock<ILogger<AuthService>> _loggerMock;
@@ -34,6 +35,7 @@ public class AuthServiceTests
         _userManagerMock = new Mock<UserManager<AppUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _customerRepoMock = new Mock<ICustomerRepository>();
+        _refreshTokenRepoMock = new Mock<IRefreshTokenRepository>();
         _mapper = TestMapperConfig.CreateMapper();
         _loggerMock = new Mock<ILogger<AuthService>>();
 
@@ -43,10 +45,21 @@ public class AuthServiceTests
         _dbContext = new AppDbContext(options);
 
         _unitOfWorkMock.Setup(u => u.Customers).Returns(_customerRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.RefreshTokens).Returns(_refreshTokenRepoMock.Object);
         _unitOfWorkMock.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).Returns(() => _dbContext.SaveChangesAsync());
+        _refreshTokenRepoMock
+            .Setup(r => r.AddAsync(It.IsAny<RefreshToken>()))
+            .ReturnsAsync((RefreshToken refreshToken) =>
+            {
+                _dbContext.RefreshTokens.Add(refreshToken);
+                return refreshToken;
+            });
+        _refreshTokenRepoMock
+            .Setup(r => r.GetByTokenAsync(It.IsAny<string>()))
+            .ReturnsAsync((string token) => _dbContext.RefreshTokens.FirstOrDefault(refreshToken => refreshToken.Token == token));
 
         var configValues = new Dictionary<string, string?>
         {
@@ -59,7 +72,7 @@ public class AuthServiceTests
         _configuration = new ConfigurationBuilder().AddInMemoryCollection(configValues).Build();
 
         _emailServiceMock = new Mock<IEmailService>();
-        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object, _dbContext, _emailServiceMock.Object);
+        _sut = new AuthService(_userManagerMock.Object, _unitOfWorkMock.Object, _mapper, _configuration, _loggerMock.Object, _emailServiceMock.Object);
     }
 
     // ──────── RegisterAsync ────────

@@ -117,6 +117,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     /// <summary>Gets or sets the NewsletterSubscribers table.</summary>
     public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
 
+    /// <summary>Gets or sets processed external webhook events.</summary>
+    public DbSet<ExternalWebhookEvent> ExternalWebhookEvents => Set<ExternalWebhookEvent>();
+
     /// <summary>Configures the model using Fluent API.</summary>
     protected override void OnModelCreating(ModelBuilder builder)
     {

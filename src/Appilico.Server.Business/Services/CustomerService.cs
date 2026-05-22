@@ -58,7 +58,7 @@ public class CustomerService : ICustomerService
     }
 
     /// <inheritdoc/>
-    public async Task<ApiResponse<CustomerDto>> UpdateAsync(Guid id, UpdateCustomerRequest request, string userId)
+    public async Task<ApiResponse<CustomerDto>> UpdateAsync(Guid id, UpdateCustomerRequest request, string userId, bool canManageMembershipTier = false)
     {
         var customer = await _unitOfWork.Customers.GetWithAddressesAsync(id);
         if (customer == null)
@@ -71,7 +71,7 @@ public class CustomerService : ICustomerService
             if (request.PhoneNumber != null) customer.User.PhoneNumber = request.PhoneNumber;
         }
 
-        if (request.MembershipTier.HasValue)
+        if (canManageMembershipTier && request.MembershipTier.HasValue)
             customer.MembershipTier = request.MembershipTier.Value;
 
         customer.UpdatedBy = userId;

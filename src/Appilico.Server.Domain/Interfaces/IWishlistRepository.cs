@@ -12,4 +12,7 @@ public interface IWishlistRepository : IGenericRepository<Wishlist>
 
     /// <summary>Gets a specific wishlist item.</summary>
     Task<Wishlist?> GetByCustomerAndProductAsync(Guid customerId, Guid productId);
+
+    /// <summary>Gets a soft-deleted wishlist item for restore flows.</summary>
+    Task<Wishlist?> GetSoftDeletedByCustomerAndProductAsync(Guid customerId, Guid productId);
 }
