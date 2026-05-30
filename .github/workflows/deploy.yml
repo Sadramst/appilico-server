@@ -72,6 +72,27 @@ jobs:
             backup_dir="$deploy_root/backend.previous"
             archive=/tmp/appilico-backend.tar.gz
 
+            repair_nginx() {
+              if [ -d "$deploy_root/nginx/conf.d" ]; then
+                sed -i \
+                  -e 's/api:5000/api:8080/g' \
+                  -e 's/backend:8080/api:8080/g' \
+                  "$deploy_root"/nginx/conf.d/*.conf 2>/dev/null || true
+                rm -f "$deploy_root"/nginx/conf.d/*.bak "$deploy_root"/nginx/conf.d/*.backup 2>/dev/null || true
+              fi
+
+              if docker ps -a --format '{{.Names}}' | grep -qx appilico-nginx; then
+                api_container_for_nginx=$(docker compose ps -q api 2>/dev/null || true)
+                if [ -n "$api_container_for_nginx" ]; then
+                  api_network=$(docker inspect "$api_container_for_nginx" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' 2>/dev/null | head -n 1)
+                  if [ -n "$api_network" ]; then
+                    docker network connect "$api_network" appilico-nginx || true
+                  fi
+                fi
+                docker restart appilico-nginx || true
+              fi
+            }
+
             rollback() {
               exit_code=$?
               if [ "$exit_code" -ne 0 ] && [ -d "$backup_dir" ]; then
@@ -80,7 +101,7 @@ jobs:
                 mv "$backup_dir" "$current_dir"
                 cd "$deploy_root"
                 docker compose up -d --build api || true
-                docker restart appilico-nginx || true
+                repair_nginx || true
               fi
               exit "$exit_code"
             }
@@ -99,6 +120,8 @@ jobs:
             mv "$release_dir" "$current_dir"
 
             cd "$deploy_root"
+            sed -i 's/ASPNETCORE_ENVIRONMENT=Development/ASPNETCORE_ENVIRONMENT=Production/g' docker-compose.yml .env 2>/dev/null || true
+
             echo "Building api service"
             docker compose build api
 
@@ -117,6 +140,6 @@ jobs:
               sleep 3
             done
 
-            docker restart appilico-nginx
+            repair_nginx
             rm -rf "$backup_dir"
             echo "Deployed at $(date)"

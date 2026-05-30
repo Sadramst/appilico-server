@@ -30,15 +30,18 @@ jobs:
 
             echo "== compose ps =="
             cd /opt/appilico || exit 0
+            echo "== repair compose environment =="
+            sed -i 's/ASPNETCORE_ENVIRONMENT=Development/ASPNETCORE_ENVIRONMENT=Production/g' docker-compose.yml .env 2>/dev/null || true
+            docker compose up -d api || true
             docker compose ps
 
             echo "== listeners =="
             ss -ltnp | grep -E ':(80|443|5000|8080)\b' || true
 
             echo "== local probes =="
-            curl -fsS --max-time 15 http://127.0.0.1:5000/health/live || true
+            docker exec appilico-api-1 curl -fsS --max-time 15 http://127.0.0.1:8080/health/live || true
             echo
-            curl -fsS --max-time 15 http://127.0.0.1:5000/api/storefront/config || true
+            docker exec appilico-api-1 curl -fsS --max-time 15 http://127.0.0.1:8080/api/storefront/config || true
             echo
 
             echo "== api logs =="
