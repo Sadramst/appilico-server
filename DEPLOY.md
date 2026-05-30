@@ -22,14 +22,14 @@ variables, health checks, and rollback process, also see [DEPLOYMENT.md](DEPLOYM
 ssh root@YOUR_VPS_IP
 mkdir -p /opt/appilico
 cd /opt/appilico
-git clone https://github.com/Sadramst/appilico-shop-server.git server
-cd server
+git clone https://github.com/Sadramst/appilico-server.git backend
+cd backend
 ```
 
 ## Step 2: Create `.env` file
 
 ```bash
-cp .env.example .env
+cd /opt/appilico
 nano .env
 ```
 
@@ -71,13 +71,14 @@ ufw enable
 The initial `nginx/conf.d/api.conf` only serves HTTP — this is needed for certbot to verify domain ownership.
 
 ```bash
-docker compose up -d
+cd /opt/appilico
+docker compose up -d --build api
 ```
 
 Verify it's running:
 ```bash
 docker compose ps
-docker compose logs backend --tail 50
+docker compose logs api --tail 50
 ```
 
 Test HTTP is working (from your local machine):
@@ -108,7 +109,7 @@ If successful, you'll see: `Congratulations! Your certificate and chain have bee
 cp nginx/conf.d/api.ssl.conf nginx/conf.d/api.conf
 
 # Restart nginx to pick up SSL
-docker compose restart nginx
+docker restart appilico-nginx
 ```
 
 ## Step 7: Verify everything
@@ -137,7 +138,7 @@ crontab -e
 
 Add this line:
 ```
-0 3 * * * cd /opt/appilico/server && docker compose run --rm certbot renew --quiet && docker compose restart nginx
+0 3 * * * cd /opt/appilico && docker compose run --rm certbot renew --quiet && docker restart appilico-nginx
 ```
 
 ---
@@ -154,8 +155,8 @@ Your docker-compose.yml was outdated. Pull the latest code: `git pull`
 
 ### Swagger not loading
 - Production Swagger is disabled unless `SWAGGER_ENABLED=true`.
-- Check backend is running: `docker compose logs backend --tail 20`
-- Check nginx is proxying: `docker compose logs nginx --tail 20`
+- Check API is running: `docker compose logs api --tail 20`
+- Check nginx is proxying: `docker logs appilico-nginx --tail 20`
 
 ### Database connection fails
 - Check postgres is healthy: `docker compose ps` — postgres should show "healthy"
@@ -163,16 +164,16 @@ Your docker-compose.yml was outdated. Pull the latest code: `git pull`
 
 ### View logs
 ```bash
-docker compose logs backend --tail 100 -f    # API logs (live)
-docker compose logs nginx --tail 50           # Nginx logs
+docker compose logs api --tail 100 -f        # API logs (live)
+docker logs appilico-nginx --tail 50         # Nginx logs
 docker compose logs postgres --tail 50        # Database logs
 ```
 
 ### Rebuild after code changes
 ```bash
 git pull
-docker compose build backend
-docker compose up -d
+cd /opt/appilico
+docker compose up -d --build api
 ```
 
 ### Run verification before deploy

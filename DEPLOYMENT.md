@@ -58,22 +58,23 @@ Docker images include a curl-based health check against `/health/live`, and `doc
 Manual VPS deployment:
 
 ```bash
-cd /opt/appilico/server
-git pull origin main
+cd /opt/appilico/backend
+git fetch origin main
+git reset --hard origin/main
 cd /opt/appilico
-docker compose up -d --build backend
-backend_container=$(docker compose ps -q backend)
-docker inspect --format='{{.State.Health.Status}}' "$backend_container"
-docker compose restart nginx
+docker compose up -d --build api
+api_container=$(docker compose ps -q api)
+docker inspect --format='{{.State.Health.Status}}' "$api_container"
+docker restart appilico-nginx
 ```
 
-The GitHub Actions deploy workflow performs the same backend rebuild and waits for the backend container to become healthy before restarting nginx.
+The GitHub Actions deploy workflow performs the same API rebuild and waits for the API container to become healthy before restarting nginx.
 
 ## Rollback
 
 1. Identify the last known-good commit or image.
 2. Revert the VPS checkout to that commit.
-3. Run `docker compose up -d --build backend`.
+3. Run `docker compose up -d --build api` from `/opt/appilico`.
 4. Verify `/health/live`, `/health/ready`, and one representative authenticated API flow.
 5. Only roll database migrations backward if the rollback requires schema removal and the data impact is understood.
 

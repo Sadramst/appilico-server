@@ -17,8 +17,8 @@ NC='\033[0m' # No Color
 
 # Configuration
 DEPLOY_DIR="/opt/appilico"
-SERVER_DIR="$DEPLOY_DIR/server"
-REPO_URL="https://github.com/appilico/server.git"
+SERVER_DIR="$DEPLOY_DIR/backend"
+REPO_URL="https://github.com/Sadramst/appilico-server.git"
 BRANCH="main"
 
 # Function to print status
@@ -64,7 +64,8 @@ if [ ! -d "$SERVER_DIR/.git" ]; then
 else
     print_status "Repository already exists, pulling latest changes..."
     cd "$SERVER_DIR"
-    git pull origin "$BRANCH"
+    git fetch origin "$BRANCH"
+    git reset --hard "origin/$BRANCH"
     print_status "Repository updated"
 fi
 
@@ -87,34 +88,38 @@ fi
 print_section "Building and starting Docker containers"
 cd "$DEPLOY_DIR"
 
-print_status "Building backend service..."
-docker compose build backend
+print_status "Building and starting API service..."
+docker compose up -d --build api
 
-print_status "Starting backend and database..."
-docker compose up -d backend db
-
-print_status "Waiting for backend to be ready (30 seconds)..."
-sleep 30
-
-# Step 6: Run database migrations
-print_section "Running database migrations"
-print_status "Applying Entity Framework migrations..."
-docker compose exec -T backend dotnet ef database update --project src/AppilicoShopServer.DataAccess/AppilicoShopServer.DataAccess.csproj || true
-
-# Step 7: Restart nginx
+# Step 6: Restart nginx
 print_section "Configuring reverse proxy"
 print_status "Restarting nginx..."
-docker compose restart nginx
+docker restart appilico-nginx
 
-# Step 8: Verify deployment
+# Step 7: Verify deployment
 print_section "Verifying deployment"
-sleep 5
+api_container=$(docker compose ps -q api)
+for attempt in $(seq 1 20); do
+    status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
+    if [ "$status" = "healthy" ]; then
+        print_status "API container is healthy"
+        break
+    fi
 
-# Check if backend is responding
-if curl -sf http://localhost:5000/health >/dev/null 2>&1; then
-    print_status "Backend health check passed"
+    if [ "$attempt" = "20" ]; then
+        print_error "API container did not become healthy"
+        docker compose logs --tail=100 api
+        exit 1
+    fi
+
+    sleep 3
+done
+
+# Check if API is responding
+if curl -sf http://localhost:5000/health >/dev/null 2>&1 || curl -sf http://localhost:5000/health/live >/dev/null 2>&1; then
+    print_status "API health check passed"
 else
-    print_error "Backend health check failed - check logs with: docker compose logs backend"
+    print_error "API health check failed - check logs with: docker compose logs api"
 fi
 
 # Check if nginx is responding
@@ -134,9 +139,9 @@ echo "Deployment directory: $DEPLOY_DIR"
 echo "Application directory: $SERVER_DIR"
 echo ""
 echo "Useful commands:"
-echo "  View logs:        cd $DEPLOY_DIR && docker compose logs -f backend"
+echo "  View logs:        cd $DEPLOY_DIR && docker compose logs -f api"
 echo "  Stop containers:  cd $DEPLOY_DIR && docker compose down"
-echo "  Restart backend:  cd $DEPLOY_DIR && docker compose restart backend"
+echo "  Restart API:      cd $DEPLOY_DIR && docker compose restart api"
 echo "  View running containers: docker ps"
 echo ""
 echo "Test endpoints:"

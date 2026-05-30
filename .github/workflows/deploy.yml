@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps-main
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -32,6 +39,28 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create deployment archive
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='**/bin' \
+            --exclude='**/obj' \
+            --exclude='**/Logs' \
+            -czf appilico-backend.tar.gz .
+
+      - name: Upload source archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: appilico-backend.tar.gz
+          target: /tmp
+          overwrite: true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -39,23 +68,61 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script_stop: true
+          command_timeout: 30m
           script: |
-            cd /opt/appilico/backend
-            git fetch origin main
-            git reset --hard origin/main
-            cd /opt/appilico
-            docker compose up -d --build api
+            set -euo pipefail
+
+            deploy_root=/opt/appilico
+            current_dir="$deploy_root/backend"
+            release_dir="$deploy_root/backend.next"
+            backup_dir="$deploy_root/backend.previous"
+            archive=/tmp/appilico-backend.tar.gz
+
+            rollback() {
+              exit_code=$?
+              if [ "$exit_code" -ne 0 ] && [ -d "$backup_dir" ]; then
+                echo "Deployment failed; rolling back source and API container."
+                rm -rf "$current_dir"
+                mv "$backup_dir" "$current_dir"
+                cd "$deploy_root"
+                docker compose up -d --build api || true
+                docker restart appilico-nginx || true
+              fi
+              exit "$exit_code"
+            }
+            trap rollback EXIT
+
+            echo "Preparing backend source from Actions archive"
+            rm -rf "$release_dir"
+            mkdir -p "$release_dir"
+            tar -xzf "$archive" -C "$release_dir"
+            rm -f "$archive"
+
+            rm -rf "$backup_dir"
+            if [ -d "$current_dir" ]; then
+              mv "$current_dir" "$backup_dir"
+            fi
+            mv "$release_dir" "$current_dir"
+
+            cd "$deploy_root"
+            echo "Building api service"
+            docker compose build api
+
+            echo "Starting api service"
+            docker compose up -d api
             api_container=$(docker compose ps -q api)
-            for attempt in $(seq 1 20); do
+            for attempt in $(seq 1 40); do
               status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
               if [ "$status" = "healthy" ]; then
                 break
               fi
-              if [ "$attempt" = "20" ]; then
+              if [ "$attempt" = "40" ]; then
                 docker compose logs --tail=100 api
                 exit 1
               fi
               sleep 3
             done
+
             docker restart appilico-nginx
+            rm -rf "$backup_dir"
             echo "Deployed at $(date)"
