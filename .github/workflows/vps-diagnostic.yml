@@ -1,0 +1,57 @@
+name: VPS Diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect VPS containers
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: false
+          command_timeout: 10m
+          script: |
+            set -u
+
+            echo "== host =="
+            hostname
+            date -u
+
+            echo "== containers =="
+            docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+
+            echo "== compose ps =="
+            cd /opt/appilico || exit 0
+            docker compose ps
+
+            echo "== listeners =="
+            ss -ltnp | grep -E ':(80|443|5000|8080)\b' || true
+
+            echo "== local probes =="
+            curl -fsS --max-time 15 http://127.0.0.1:5000/health/live || true
+            echo
+            curl -fsS --max-time 15 http://127.0.0.1:5000/api/storefront/config || true
+            echo
+
+            echo "== api logs =="
+            docker compose logs --tail=160 api || true
+
+            echo "== nginx logs =="
+            docker logs --tail=120 appilico-nginx || true
+
+            echo "== nginx config test =="
+            docker exec appilico-nginx nginx -t || true
+
+            echo "== restart nginx =="
+            docker restart appilico-nginx || true
+
+            echo "== post-restart containers =="
+            docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
