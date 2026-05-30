@@ -43,13 +43,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create deployment archive
-        run: |
-          tar \
-            --exclude='.git' \
-            --exclude='**/bin' \
-            --exclude='**/obj' \
-            --exclude='**/Logs' \
-            -czf appilico-backend.tar.gz .
+        run: git archive --format=tar.gz --output=appilico-backend.tar.gz HEAD
 
       - name: Upload source archive
         uses: appleboy/scp-action@v0.1.7
