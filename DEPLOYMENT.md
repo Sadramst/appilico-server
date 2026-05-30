@@ -55,20 +55,28 @@ Docker images include a curl-based health check against `/health/live`, and `doc
 
 ## Deployment
 
-Manual VPS deployment:
+Normal deployment is handled by GitHub Actions. The deploy workflow validates the solution, creates a `git archive`, uploads it to the VPS, swaps `/opt/appilico/backend`, rebuilds the `api` service, waits for `/health/live`, then repairs/restarts the standalone `appilico-nginx` container.
+
+During deploy, the workflow also ensures VPS runtime configuration that must not live in the repository:
+
+- `/opt/appilico/.env` contains a strong `JWT_SECRET`; a new one is generated only when it is missing or invalid.
+- `/opt/appilico/docker-compose.override.yml` forces the `api` service to run as `ASPNETCORE_ENVIRONMENT=Production`, listen on `http://+:8080`, and expose `JWT__Secret` to the app.
+- `/opt/appilico/nginx/conf.d/*.conf` proxies to `api:8080`; stale backup configs are removed.
+- The standalone `appilico-nginx` container is attached to the API Docker network before restart.
+
+Emergency VPS deployment/repair:
 
 ```bash
-cd /opt/appilico/backend
-git fetch origin main
-git reset --hard origin/main
 cd /opt/appilico
 docker compose up -d --build api
 api_container=$(docker compose ps -q api)
 docker inspect --format='{{.State.Health.Status}}' "$api_container"
+api_network=$(docker inspect "$api_container" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' | head -n 1)
+docker network connect "$api_network" appilico-nginx || true
 docker restart appilico-nginx
 ```
 
-The GitHub Actions deploy workflow performs the same API rebuild and waits for the API container to become healthy before restarting nginx.
+Avoid VPS `git fetch` deploys; the production box may not have interactive Git credentials configured.
 
 ## Rollback
 
@@ -83,6 +91,7 @@ The GitHub Actions deploy workflow performs the same API rebuild and waits for t
 ```bash
 curl -fsS https://api.appilico.com/health/live
 curl -fsS https://api.appilico.com/health/ready
+curl -fsS https://api.appilico.com/api/storefront/config
 curl -I https://api.appilico.com/swagger/index.html
 ```
 

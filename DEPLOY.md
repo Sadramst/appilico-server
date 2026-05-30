@@ -158,6 +158,11 @@ Your docker-compose.yml was outdated. Pull the latest code: `git pull`
 - Check API is running: `docker compose logs api --tail 20`
 - Check nginx is proxying: `docker logs appilico-nginx --tail 20`
 
+### 502 from nginx after deploy
+- The API listens on port 8080 inside the container; production nginx must proxy to `api:8080`.
+- `appilico-nginx` is a standalone container on the VPS, not always a compose service. Attach it to the API network if DNS lookup for `api` fails.
+- The API must run with `ASPNETCORE_ENVIRONMENT=Production` and a valid `JWT_SECRET`; missing JWT configuration will prevent startup.
+
 ### Database connection fails
 - Check postgres is healthy: `docker compose ps` — postgres should show "healthy"
 - Verify password matches between `POSTGRES_PASSWORD` and `DB_CONNECTION_STRING`
@@ -171,10 +176,13 @@ docker compose logs postgres --tail 50        # Database logs
 
 ### Rebuild after code changes
 ```bash
-git pull
 cd /opt/appilico
 docker compose up -d --build api
+docker network connect appilico_default appilico-nginx || true
+docker restart appilico-nginx
 ```
+
+Prefer the GitHub Actions archive deploy for normal releases; avoid VPS `git pull` unless Git credentials are known to be configured.
 
 ### Run verification before deploy
 ```bash
