@@ -62,6 +62,14 @@ jobs:
             echo "== recreate nginx =="
             cd /opt/appilico || exit 0
             docker compose up -d --force-recreate nginx || docker restart appilico-nginx || true
+
+            echo "== connect nginx to api network =="
+            api_network=$(docker inspect appilico-api-1 --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' | head -n 1)
+            if [ -n "$api_network" ]; then
+              docker network connect "$api_network" appilico-nginx || true
+            fi
+            docker inspect appilico-nginx --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' || true
+            docker restart appilico-nginx || true
             docker exec appilico-nginx nginx -t || true
 
             echo "== post-restart containers =="
