@@ -17,16 +17,16 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore Appilico.Server.sln
+        run: dotnet restore AppilicoShopServer.sln
 
       - name: Build
-        run: dotnet build Appilico.Server.sln --configuration Release --no-restore
+        run: dotnet build AppilicoShopServer.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test Appilico.Server.sln --configuration Release --no-build --verbosity normal
+        run: dotnet test AppilicoShopServer.sln --configuration Release --no-build --verbosity normal
 
       - name: Vulnerability scan
-        run: dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+        run: dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
 
   deploy:
     needs: validate

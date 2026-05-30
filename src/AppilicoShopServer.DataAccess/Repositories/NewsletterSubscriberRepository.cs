@@ -1,0 +1,25 @@
+using AppilicoShopServer.DataAccess.Data;
+using AppilicoShopServer.Domain.Entities;
+using AppilicoShopServer.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace AppilicoShopServer.DataAccess.Repositories;
+
+/// <summary>Newsletter subscriber repository.</summary>
+public class NewsletterSubscriberRepository : GenericRepository<NewsletterSubscriber>, INewsletterSubscriberRepository
+{
+    /// <summary>Initializes the repository.</summary>
+    public NewsletterSubscriberRepository(AppDbContext context) : base(context) { }
+
+    /// <inheritdoc/>
+    public async Task<NewsletterSubscriber?> GetByEmailAsync(string email)
+    {
+        return await _dbSet.FirstOrDefaultAsync(subscriber => subscriber.Email == email);
+    }
+
+    /// <inheritdoc/>
+    public async Task<NewsletterSubscriber?> GetActiveByEmailAsync(string email)
+    {
+        return await _dbSet.FirstOrDefaultAsync(subscriber => subscriber.Email == email && subscriber.IsActive);
+    }
+}

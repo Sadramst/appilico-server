@@ -44,14 +44,14 @@ Recommended follow-up:
 During the audit, `https://api.appilico.com/swagger/v1/swagger.json` appeared to
 advertise a different API surface from this repository. Do not deploy this repo
 to production until the VPS checkout, GitHub remote, running container image, and
-public API surface are verified to be the intended Appilico Server source.
+public API surface are verified to be the intended AppilicoShopServer source.
 
 ## Dependency Scanning
 
 Before deploying, run:
 
 ```bash
-dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
 ```
 
 The Phase 2/3 modernization pass removed known vulnerable package versions. Keep

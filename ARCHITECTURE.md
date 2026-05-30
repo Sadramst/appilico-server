@@ -1,4 +1,4 @@
-# Appilico Server Architecture
+# AppilicoShopServer Architecture
 
 This repository uses a layered .NET 8 architecture. Phase 2/3 tightened the
 layer boundaries while keeping public controller contracts stable. Phase 4/5
@@ -8,12 +8,12 @@ the project dependency direction.
 ## Dependency Direction
 
 ```text
-Appilico.Server.API
-  -> Appilico.Server.Business
-  -> Appilico.Server.Domain
+AppilicoShopServer.API
+  -> AppilicoShopServer.Business
+  -> AppilicoShopServer.Domain
 
-Appilico.Server.DataAccess
-  -> Appilico.Server.Domain
+AppilicoShopServer.DataAccess
+  -> AppilicoShopServer.Domain
 ```
 
 The API project is the composition root. It references DataAccess to register EF
@@ -66,7 +66,7 @@ Repository abstractions introduced or expanded in Phase 2/3 include:
 ## API Composition
 
 `Program.cs` is intentionally small. Startup wiring now lives in
-`src/Appilico.Server.API/Extensions/AppilicoApiExtensions.cs`:
+`src/AppilicoShopServer.API/Extensions/AppilicoApiExtensions.cs`:
 
 - logging
 - persistence and Identity

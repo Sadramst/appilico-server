@@ -14,17 +14,17 @@ Use .NET 8 and keep the existing layered dependency direction:
 Run these before opening a PR or deploying:
 
 ```bash
-dotnet restore Appilico.Server.sln
-dotnet build Appilico.Server.sln --no-restore
-dotnet test Appilico.Server.sln --no-build
-dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+dotnet restore AppilicoShopServer.sln
+dotnet build AppilicoShopServer.sln --no-restore
+dotnet test AppilicoShopServer.sln --no-build
+dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
 ```
 
 Live API tests are opt-in only:
 
 ```powershell
 $env:APPILICO_API_BASE_URL="https://api.appilico.com"
-dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTests.csproj -p:RunLiveApiTests=true
+dotnet test tests/AppilicoShopServer.IntegrationTests/AppilicoShopServer.IntegrationTests.csproj -p:RunLiveApiTests=true
 ```
 
 ## Database Changes
@@ -32,7 +32,7 @@ dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTe
 When changing EF entities or configurations, add a migration from the solution root:
 
 ```bash
-dotnet ef migrations add DescriptiveMigrationName --project src/Appilico.Server.DataAccess --startup-project src/Appilico.Server.API
+dotnet ef migrations add DescriptiveMigrationName --project src/AppilicoShopServer.DataAccess --startup-project src/AppilicoShopServer.API
 ```
 
 Review the generated migration and model snapshot before committing.

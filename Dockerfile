@@ -5,19 +5,19 @@ WORKDIR /src
 # Copy solution and project files
 COPY *.sln .
 COPY nuget.config .
-COPY src/Appilico.Server.Domain/Appilico.Server.Domain.csproj src/Appilico.Server.Domain/
-COPY src/Appilico.Server.DataAccess/Appilico.Server.DataAccess.csproj src/Appilico.Server.DataAccess/
-COPY src/Appilico.Server.Business/Appilico.Server.Business.csproj src/Appilico.Server.Business/
-COPY src/Appilico.Server.API/Appilico.Server.API.csproj src/Appilico.Server.API/
+COPY src/AppilicoShopServer.Domain/AppilicoShopServer.Domain.csproj src/AppilicoShopServer.Domain/
+COPY src/AppilicoShopServer.DataAccess/AppilicoShopServer.DataAccess.csproj src/AppilicoShopServer.DataAccess/
+COPY src/AppilicoShopServer.Business/AppilicoShopServer.Business.csproj src/AppilicoShopServer.Business/
+COPY src/AppilicoShopServer.API/AppilicoShopServer.API.csproj src/AppilicoShopServer.API/
 
 # Restore dependencies
-RUN dotnet restore src/Appilico.Server.API/Appilico.Server.API.csproj
+RUN dotnet restore src/AppilicoShopServer.API/AppilicoShopServer.API.csproj
 
 # Copy source code
 COPY src/ src/
 
 # Build and publish
-RUN dotnet publish src/Appilico.Server.API/Appilico.Server.API.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/AppilicoShopServer.API/AppilicoShopServer.API.csproj -c Release -o /app/publish --no-restore
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
@@ -45,4 +45,4 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD curl -fsS "http://localhost:${PORT:-8080}/health/live" || exit 1
 
-ENTRYPOINT ["dotnet", "Appilico.Server.API.dll"]
+ENTRYPOINT ["dotnet", "AppilicoShopServer.API.dll"]

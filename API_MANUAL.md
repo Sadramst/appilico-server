@@ -1,8 +1,8 @@
-# Appilico API — Legacy Client Integration Manual
+# AppilicoShopServer API — Legacy Client Integration Manual
 
 > **Status:** Legacy/stale reference. Validate against live Swagger or the current controllers before using this document as a client contract.
 > **Base URL (Production):** `https://api.appilico.com`
-> **Base URL (Local Dev):** use the URL printed by `dotnet run --project src/Appilico.Server.API`
+> **Base URL (Local Dev):** use the URL printed by `dotnet run --project src/AppilicoShopServer.API`
 > **Swagger UI:** Enabled in Development. Production Swagger is disabled unless explicitly enabled.
 
 Operational headers/endpoints:

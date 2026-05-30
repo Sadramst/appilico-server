@@ -1,4 +1,4 @@
-# Appilico Server — VPS Deployment Guide
+# AppilicoShopServer — VPS Deployment Guide
 
 For the current CI/deployment checklist, migration notes, provider environment
 variables, health checks, and rollback process, also see [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -22,7 +22,7 @@ variables, health checks, and rollback process, also see [DEPLOYMENT.md](DEPLOYM
 ssh root@YOUR_VPS_IP
 mkdir -p /opt/appilico
 cd /opt/appilico
-git clone https://github.com/Sadramst/appilico-server.git server
+git clone https://github.com/Sadramst/appilico-shop-server.git server
 cd server
 ```
 
@@ -177,8 +177,8 @@ docker compose up -d
 
 ### Run verification before deploy
 ```bash
-dotnet test Appilico.Server.sln --no-restore
-dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+dotnet test AppilicoShopServer.sln --no-restore
+dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
 ```
 
 The dependency scan should report no vulnerable packages before deploying.
@@ -186,7 +186,7 @@ The dependency scan should report no vulnerable packages before deploying.
 Optional live API tests are excluded from normal runs. To run them deliberately:
 ```powershell
 $env:APPILICO_API_BASE_URL="https://api.appilico.com"
-dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTests.csproj -p:RunLiveApiTests=true
+dotnet test tests/AppilicoShopServer.IntegrationTests/AppilicoShopServer.IntegrationTests.csproj -p:RunLiveApiTests=true
 ```
 
 ### Secret rotation

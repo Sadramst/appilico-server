@@ -1,7 +1,7 @@
-# Appilico E-Commerce — Complete Server API Manual
+# AppilicoShopServer — Complete Server API Manual
 
 > **Status:** Legacy/stale reference. Validate against live Swagger or the current controllers before using this document as a client contract.
-> **Base URL (local):** use the URL printed by `dotnet run --project src/Appilico.Server.API`
+> **Base URL (local):** use the URL printed by `dotnet run --project src/AppilicoShopServer.API`
 > **Base URL (deployed):** `https://api.appilico.com`
 > **All responses** use the standard envelope. **Enums** are serialized as **integers** (not strings).
 

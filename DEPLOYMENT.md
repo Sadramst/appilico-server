@@ -1,4 +1,4 @@
-# Appilico Server Deployment
+# AppilicoShopServer Deployment
 
 This is the production deployment and operations checklist for the current repository. The older VPS walkthrough remains in [DEPLOY.md](DEPLOY.md); this file is the higher-level release checklist used with the CI/deploy workflow.
 
@@ -11,10 +11,10 @@ Before deploying to `api.appilico.com`, verify the VPS checkout, branch, contain
 Run locally or in CI before deploy:
 
 ```bash
-dotnet restore Appilico.Server.sln
-dotnet build Appilico.Server.sln --configuration Release --no-restore
-dotnet test Appilico.Server.sln --configuration Release --no-build
-dotnet list Appilico.Server.sln package --vulnerable --include-transitive
+dotnet restore AppilicoShopServer.sln
+dotnet build AppilicoShopServer.sln --configuration Release --no-restore
+dotnet test AppilicoShopServer.sln --configuration Release --no-build
+dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
 ```
 
 The GitHub Actions deploy workflow now runs restore, build, test, and vulnerable-package scan before the SSH deployment job.
@@ -24,7 +24,7 @@ The GitHub Actions deploy workflow now runs restore, build, test, and vulnerable
 Apply EF migrations before or during rollout:
 
 ```bash
-dotnet ef database update --project src/Appilico.Server.DataAccess --startup-project src/Appilico.Server.API
+dotnet ef database update --project src/AppilicoShopServer.DataAccess --startup-project src/AppilicoShopServer.API
 ```
 
 The current final-phase migration is `AddProviderWebhookEvents`. It adds:

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: appilico-server
+    name: appilico-shop-server
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile

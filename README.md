@@ -1,4 +1,4 @@
-# Appilico E-Commerce Backend
+# AppilicoShopServer
 
 Full-featured e-commerce backend API built with ASP.NET Core 8, Entity Framework Core 8, and PostgreSQL.
 
@@ -7,19 +7,19 @@ Full-featured e-commerce backend API built with ASP.NET Core 8, Entity Framework
 Clean layered architecture with one-way project dependencies:
 
 ```
-Appilico.Server.sln
+AppilicoShopServer.sln
 ├── src/
-│   ├── Appilico.Server.Domain       # Entities, Enums, Interfaces
-│   ├── Appilico.Server.DataAccess   # EF Core DbContext, Repositories, Configs
-│   ├── Appilico.Server.Business     # DTOs, Services, Validators, Mappings
-│   └── Appilico.Server.API          # Controllers, Middleware, Seed Data
+│   ├── AppilicoShopServer.Domain       # Entities, Enums, Interfaces
+│   ├── AppilicoShopServer.DataAccess   # EF Core DbContext, Repositories, Configs
+│   ├── AppilicoShopServer.Business     # DTOs, Services, Validators, Mappings
+│   └── AppilicoShopServer.API          # Controllers, Middleware, Seed Data
 └── tests/
-    ├── Appilico.Server.UnitTests
-    ├── Appilico.Server.IntegrationTests
-    └── Appilico.Server.DataAccess.Tests
+    ├── AppilicoShopServer.UnitTests
+    ├── AppilicoShopServer.IntegrationTests
+    └── AppilicoShopServer.DataAccess.Tests
 ```
 
-`Appilico.Server.Business` depends on Domain abstractions only; it does not
+`AppilicoShopServer.Business` depends on Domain abstractions only; it does not
 reference DataAccess or `AppDbContext`. The API project is the composition root
 and wires DataAccess implementations at startup. See [ARCHITECTURE.md](ARCHITECTURE.md)
 for the dependency map, repository pattern, and modernization notes.
@@ -79,10 +79,10 @@ dotnet restore
 # Example: Host=localhost;Database=appilicodb_dev;Username=appilico;Password=development-only-password
 
 # Run database migrations
-dotnet ef database update --project src/Appilico.Server.DataAccess --startup-project src/Appilico.Server.API
+dotnet ef database update --project src/AppilicoShopServer.DataAccess --startup-project src/AppilicoShopServer.API
 
 # Run the API
-dotnet run --project src/Appilico.Server.API
+dotnet run --project src/AppilicoShopServer.API
 ```
 
 The API will be available at the configured ASP.NET Core URL. Swagger is enabled in Development and disabled by default in Production unless `Swagger:Enabled=true`.
@@ -105,11 +105,11 @@ docker-compose up -d
 ### Run Tests
 
 ```bash
-dotnet test Appilico.Server.sln --no-restore
+dotnet test AppilicoShopServer.sln --no-restore
 
 # Optional live-server tests; requires a running API and is disabled by default
 $env:APPILICO_API_BASE_URL="https://api.appilico.com"
-dotnet test tests/Appilico.Server.IntegrationTests/Appilico.Server.IntegrationTests.csproj -p:RunLiveApiTests=true
+dotnet test tests/AppilicoShopServer.IntegrationTests/AppilicoShopServer.IntegrationTests.csproj -p:RunLiveApiTests=true
 ```
 
 ## Default Seed Accounts
@@ -201,8 +201,8 @@ Some seed data uses numbered customer accounts such as `customer1@appilico.com` 
 The normal package health check is:
 
 ```bash
-dotnet list Appilico.Server.sln package --vulnerable --include-transitive
-dotnet list Appilico.Server.sln package --outdated --highest-minor
+dotnet list AppilicoShopServer.sln package --vulnerable --include-transitive
+dotnet list AppilicoShopServer.sln package --outdated --highest-minor
 ```
 
 As of the Phase 2/3 modernization pass, there are no vulnerable packages and no

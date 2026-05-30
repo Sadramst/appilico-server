@@ -9,7 +9,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - JWT__Secret=${JWT_SECRET}
-      - JWT__Issuer=Appilico.Server
+      - JWT__Issuer=AppilicoShopServer
       - JWT__Audience=Appilico.Client
       - JWT__ExpirationInMinutes=60
       - JWT__RefreshTokenExpirationInDays=7
