@@ -50,8 +50,17 @@ jobs:
             echo "== nginx config test =="
             docker exec appilico-nginx nginx -t || true
 
+            echo "== repair nginx upstream =="
+            grep -R -n -E 'api:5000|backend:8080|api:8080|proxy_pass|upstream' /opt/appilico/nginx/conf.d || true
+            sed -i.bak \
+              -e 's/api:5000/api:8080/g' \
+              -e 's/backend:8080/api:8080/g' \
+              /opt/appilico/nginx/conf.d/*.conf
+            grep -R -n -E 'api:5000|backend:8080|api:8080|proxy_pass|upstream' /opt/appilico/nginx/conf.d || true
+
             echo "== restart nginx =="
             docker restart appilico-nginx || true
+            docker exec appilico-nginx nginx -t || true
 
             echo "== post-restart containers =="
             docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
