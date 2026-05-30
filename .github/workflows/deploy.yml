@@ -38,22 +38,24 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
           script: |
-            cd /opt/appilico/server
-            git pull origin main
+            cd /opt/appilico/backend
+            git fetch origin main
+            git reset --hard origin/main
             cd /opt/appilico
-            docker compose up -d --build backend
-            backend_container=$(docker compose ps -q backend)
+            docker compose up -d --build api
+            api_container=$(docker compose ps -q api)
             for attempt in $(seq 1 20); do
-              status=$(docker inspect --format='{{.State.Health.Status}}' "$backend_container" 2>/dev/null || echo starting)
+              status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
               if [ "$status" = "healthy" ]; then
                 break
               fi
               if [ "$attempt" = "20" ]; then
-                docker compose logs --tail=100 backend
+                docker compose logs --tail=100 api
                 exit 1
               fi
               sleep 3
             done
-            docker compose restart nginx
+            docker restart appilico-nginx
             echo "Deployed at $(date)"
