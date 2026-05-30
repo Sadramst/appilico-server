@@ -56,10 +56,12 @@ jobs:
               -e 's/api:5000/api:8080/g' \
               -e 's/backend:8080/api:8080/g' \
               /opt/appilico/nginx/conf.d/*.conf
+            rm -f /opt/appilico/nginx/conf.d/*.bak /opt/appilico/nginx/conf.d/*.backup
             grep -R -n -E 'api:5000|backend:8080|api:8080|proxy_pass|upstream' /opt/appilico/nginx/conf.d || true
 
-            echo "== restart nginx =="
-            docker restart appilico-nginx || true
+            echo "== recreate nginx =="
+            cd /opt/appilico || exit 0
+            docker compose up -d --force-recreate nginx || docker restart appilico-nginx || true
             docker exec appilico-nginx nginx -t || true
 
             echo "== post-restart containers =="
