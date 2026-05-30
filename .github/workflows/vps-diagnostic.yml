@@ -10,46 +10,73 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect VPS API and nginx
+      - name: Repair VPS production runtime
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
-          script_stop: false
-          command_timeout: 5m
+          script_stop: true
+          command_timeout: 8m
           script: |
-            set -u
+            set -eu
 
-            echo "== host =="
-            hostname
-            date -u
+            cd /opt/appilico
 
-            echo "== containers =="
+            echo "== ensure jwt secret =="
+            touch .env
+            current_jwt=$(grep -m1 '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2- || true)
+            if [ ${#current_jwt} -lt 32 ] || printf '%s' "$current_jwt" | grep -Eqi 'placeholder|will-be-overridden|development'; then
+              new_jwt=$(openssl rand -base64 64 | tr -d '\n')
+              if grep -q '^JWT_SECRET=' .env; then
+                sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$new_jwt|" .env
+              else
+                printf '\nJWT_SECRET=%s\n' "$new_jwt" >> .env
+              fi
+            fi
+            chmod 600 .env
+
+            echo "== ensure production override =="
+            printf '%s\n' \
+              'services:' \
+              '  api:' \
+              '    environment:' \
+              '      ASPNETCORE_ENVIRONMENT: Production' \
+              '      ASPNETCORE_URLS: http://+:8080' \
+              '      JWT__Secret: ${JWT_SECRET}' \
+              '      JWT__Issuer: AppilicoShopServer' \
+              '      JWT__Audience: Appilico.Client' \
+              > docker-compose.override.yml
+
+            echo "== restart api =="
+            docker compose up -d --force-recreate api
+
+            echo "== wait for api health =="
+            api_container=$(docker compose ps -q api)
+            for attempt in $(seq 1 40); do
+              if docker exec "$api_container" curl -fsS --max-time 5 http://127.0.0.1:8080/health/live >/dev/null; then
+                echo "api healthy"
+                break
+              fi
+              if [ "$attempt" -eq 40 ]; then
+                docker compose logs --tail=160 api
+                exit 1
+              fi
+              sleep 3
+            done
+
+            echo "== repair nginx =="
+            sed -i \
+              -e 's/api:5000/api:8080/g' \
+              -e 's/backend:8080/api:8080/g' \
+              /opt/appilico/nginx/conf.d/*.conf 2>/dev/null || true
+            rm -f /opt/appilico/nginx/conf.d/*.bak /opt/appilico/nginx/conf.d/*.backup 2>/dev/null || true
+            api_network=$(docker inspect "$api_container" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' | head -n 1)
+            if [ -n "$api_network" ]; then
+              docker network connect "$api_network" appilico-nginx || true
+            fi
+            docker restart appilico-nginx
+            docker exec appilico-nginx nginx -t
+
+            echo "== final containers =="
             docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
-
-            cd /opt/appilico || exit 0
-
-            echo "== compose ps =="
-            docker compose ps || true
-
-            echo "== api inspect =="
-            docker inspect appilico-api-1 --format 'status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}} exit={{.State.ExitCode}} started={{.State.StartedAt}} finished={{.State.FinishedAt}}' || true
-
-            echo "== api environment =="
-            docker exec appilico-api-1 sh -lc 'printf "ASPNETCORE_ENVIRONMENT=%s\n" "$ASPNETCORE_ENVIRONMENT"; printf "ASPNETCORE_URLS=%s\n" "$ASPNETCORE_URLS"; printf "PORT=%s\n" "$PORT"' || true
-
-            echo "== api listeners and probes =="
-            docker exec appilico-api-1 sh -lc 'ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null || true; curl -v --max-time 8 http://127.0.0.1:8080/health/live || true; echo; curl -v --max-time 8 http://127.0.0.1:5000/health/live || true' || true
-
-            echo "== api logs =="
-            docker compose logs --tail=260 api || true
-
-            echo "== nginx inspect =="
-            docker inspect appilico-nginx --format 'status={{.State.Status}} networks={{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' || true
-
-            echo "== nginx logs =="
-            docker logs --tail=120 appilico-nginx || true
-
-            echo "== nginx config test =="
-            docker exec appilico-nginx nginx -t || true
