@@ -1,0 +1,79 @@
+name: Reinitialize VPS Database
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reinitialize-db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup and reinitialize database via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+
+            cd /opt/appilico
+
+            postgres_container=$(docker compose ps -q postgres)
+            if [ -z "$postgres_container" ]; then
+              echo 'Postgres container was not found.'
+              exit 1
+            fi
+
+            postgres_user=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_USER:-postgres}"')
+            postgres_db=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_DB:-postgres}"')
+
+            backup_dir=/opt/appilico/backups
+            mkdir -p "$backup_dir"
+            backup_file="$backup_dir/${postgres_db}-before-reinitialize-$(date -u +%Y%m%d%H%M%S).sql"
+
+            echo "Backing up '$postgres_db' to $backup_file"
+            docker exec "$postgres_container" pg_dump -U "$postgres_user" -d "$postgres_db" > "$backup_file"
+            chmod 600 "$backup_file"
+
+            echo 'Stopping API before schema reset'
+            docker compose stop api || true
+
+            echo "Resetting public schema in '$postgres_db'"
+            docker exec "$postgres_container" psql \
+              -U "$postgres_user" \
+              -d "$postgres_db" \
+              -v ON_ERROR_STOP=1 \
+              -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO \"$postgres_user\"; GRANT ALL ON SCHEMA public TO public;"
+
+            echo 'Starting API so EF migrations and seed data rebuild catalog tables'
+            docker compose up -d --force-recreate api
+            api_container=$(docker compose ps -q api)
+            for attempt in $(seq 1 80); do
+              status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
+              if [ "$status" = "healthy" ]; then
+                break
+              fi
+              if [ "$attempt" = "80" ]; then
+                docker compose logs --tail=160 api
+                exit 1
+              fi
+              sleep 3
+            done
+
+            echo 'Verifying rebuilt catalog endpoints locally'
+            for path in /api/products /api/categories/tree /api/brands; do
+              echo "GET $path"
+              docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" | head -c 1600
+              echo
+            done
+
+            echo 'Catalog table counts'
+            docker exec "$postgres_container" psql \
+              -U "$postgres_user" \
+              -d "$postgres_db" \
+              -c "select 'Products' as table_name, count(*) from \"Products\" union all select 'Categories', count(*) from \"Categories\" union all select 'Brands', count(*) from \"Brands\";"
