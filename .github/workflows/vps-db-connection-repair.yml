@@ -41,12 +41,18 @@ jobs:
 
             postgres_user=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_USER:-postgres}"')
             postgres_db=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_DB:-postgres}"')
-            postgres_password=$(docker exec "$postgres_container" sh -lc 'printf %s "$POSTGRES_PASSWORD"')
+            postgres_password=$(openssl rand -hex 32)
 
             if [ -z "$postgres_password" ]; then
-              echo 'Postgres container does not expose POSTGRES_PASSWORD.'
+              echo 'Failed to generate a Postgres password.'
               exit 1
             fi
+
+            docker exec "$postgres_container" psql \
+              -U "$postgres_user" \
+              -d "$postgres_db" \
+              -v ON_ERROR_STOP=1 \
+              -c "ALTER USER \"$postgres_user\" WITH PASSWORD '$postgres_password';"
 
             write_env_key POSTGRES_USER "$postgres_user"
             write_env_key POSTGRES_DB "$postgres_db"
