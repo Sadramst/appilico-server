@@ -1,0 +1,46 @@
+name: VPS API Diagnostics
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect API via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            cd /opt/appilico
+
+            echo '--- containers ---'
+            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+
+            echo '--- compose services ---'
+            docker compose ps
+
+            echo '--- api logs ---'
+            docker compose logs --tail=250 api 2>/dev/null || docker logs --tail=250 appilico-api-1
+
+            echo '--- local endpoint checks ---'
+            api_container=$(docker compose ps -q api 2>/dev/null || true)
+            if [ -n "$api_container" ]; then
+              for path in /api/products /api/categories/tree /api/brands; do
+                echo "GET $path"
+                docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" || true
+              done
+            fi
+
+            echo '--- database table snapshot ---'
+            docker compose exec -T postgres psql -U appilico -d appilicodb -c "select table_name from information_schema.tables where table_schema='public' and table_name in ('Products','Categories','Brands','ProductImages','ProductVariants','AppSettings') order by table_name;" || true
+            docker compose exec -T postgres psql -U appilico -d appilicodb -c "select 'Products' as table_name, count(*) from \"Products\" union all select 'Categories', count(*) from \"Categories\" union all select 'Brands', count(*) from \"Brands\";" || true
