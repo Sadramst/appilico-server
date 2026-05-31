@@ -23,4 +23,12 @@ public class StorefrontController : BaseApiController
         var result = await _storefrontService.GetConfigAsync(cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>Gets reusable client theme tokens.</summary>
+    [HttpGet("theme")]
+    public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
+    {
+        var result = await _storefrontService.GetThemeAsync(cancellationToken);
+        return Ok(result);
+    }
 }

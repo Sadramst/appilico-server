@@ -9,6 +9,12 @@ public class StorefrontConfigDto
     /// <summary>Gets or sets the API version.</summary>
     public string ApiVersion { get; set; } = "v1";
 
+    /// <summary>Gets or sets the stable storefront key for current single-store mode and future multi-store routing.</summary>
+    public string StorefrontKey { get; set; } = "default";
+
+    /// <summary>Gets or sets the engine mode exposed to clients.</summary>
+    public string StorefrontMode { get; set; } = "single-store";
+
     /// <summary>Gets or sets store metadata.</summary>
     public StorefrontBrandDto Brand { get; set; } = new();
 
@@ -33,6 +39,12 @@ public class StorefrontConfigDto
     /// <summary>Gets or sets reusable auth metadata.</summary>
     public StorefrontAuthContractDto Auth { get; set; } = new();
 
+    /// <summary>Gets or sets store context metadata for future tenant-aware clients.</summary>
+    public StorefrontContextDto Context { get; set; } = new();
+
+    /// <summary>Gets or sets default SEO metadata.</summary>
+    public StorefrontSeoDto Seo { get; set; } = new();
+
     /// <summary>Gets or sets when this config was generated.</summary>
     public DateTime GeneratedAtUtc { get; set; }
 }
@@ -43,8 +55,51 @@ public class StorefrontBrandDto
     /// <summary>Gets or sets store display name.</summary>
     public string StoreName { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets store tagline.</summary>
+    public string Tagline { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets logo URL.</summary>
+    public string LogoUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets favicon URL.</summary>
+    public string FaviconUrl { get; set; } = string.Empty;
+
     /// <summary>Gets or sets public server URL.</summary>
     public string PublicBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets support email.</summary>
+    public string SupportEmail { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets support phone.</summary>
+    public string SupportPhone { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets store timezone.</summary>
+    public string TimeZone { get; set; } = "UTC";
+
+    /// <summary>Gets or sets public social links.</summary>
+    public List<StorefrontLinkDto> SocialLinks { get; set; } = new();
+
+    /// <summary>Gets or sets public legal links.</summary>
+    public List<StorefrontLinkDto> LegalLinks { get; set; } = new();
+}
+
+/// <summary>Generic public link metadata.</summary>
+public class StorefrontLinkDto
+{
+    /// <summary>Gets or sets stable link ID.</summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets link label.</summary>
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets URL or path.</summary>
+    public string Url { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets optional icon key.</summary>
+    public string Icon { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets whether clients should open the link in a new tab.</summary>
+    public bool OpenInNewTab { get; set; }
 }
 
 /// <summary>Locale metadata.</summary>
@@ -69,8 +124,26 @@ public class StorefrontThemeDto
     /// <summary>Gets or sets default theme preset.</summary>
     public string Preset { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets layout preset.</summary>
+    public string LayoutPreset { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets product card style.</summary>
+    public string ProductCardStyle { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets semantic color tokens.</summary>
+    public Dictionary<string, string> ColorTokens { get; set; } = new();
+
+    /// <summary>Gets or sets typography tokens.</summary>
+    public Dictionary<string, string> TypographyTokens { get; set; } = new();
+
+    /// <summary>Gets or sets spacing and radius tokens.</summary>
+    public Dictionary<string, string> SpacingTokens { get; set; } = new();
+
     /// <summary>Gets or sets product card fields clients should expect.</summary>
     public List<string> ProductCardFields { get; set; } = new();
+
+    /// <summary>Gets or sets generic homepage section keys.</summary>
+    public List<string> HomepageSections { get; set; } = new();
 }
 
 /// <summary>Feature capability metadata.</summary>
@@ -152,6 +225,34 @@ public class StorefrontNavigationDto
 
     /// <summary>Gets or sets category tree endpoint ID.</summary>
     public string CategoryTreeEndpointId { get; set; } = "categories.tree";
+
+    /// <summary>Gets or sets route links grouped by slot.</summary>
+    public List<StorefrontNavigationLinkDto> Links { get; set; } = new();
+}
+
+/// <summary>Generic navigation link metadata.</summary>
+public class StorefrontNavigationLinkDto
+{
+    /// <summary>Gets or sets stable link ID.</summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets link label.</summary>
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets client route path.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets navigation slot.</summary>
+    public string Slot { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets sort order inside the slot.</summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>Gets or sets whether auth is required to render or follow the link.</summary>
+    public bool RequiresAuth { get; set; }
+
+    /// <summary>Gets or sets an optional required role.</summary>
+    public string RequiredRole { get; set; } = string.Empty;
 }
 
 /// <summary>Checkout policy metadata.</summary>
@@ -168,6 +269,21 @@ public class StorefrontCheckoutPolicyDto
 
     /// <summary>Gets or sets payment creation endpoint ID.</summary>
     public string CreatePaymentEndpointId { get; set; } = "payments.create";
+
+    /// <summary>Gets or sets shipping strategy key clients can display generically.</summary>
+    public string ShippingStrategy { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets tax strategy key clients can display generically.</summary>
+    public string TaxStrategy { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets returns policy URL or path.</summary>
+    public string ReturnsPolicyUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets terms URL or path.</summary>
+    public string TermsUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets privacy URL or path.</summary>
+    public string PrivacyUrl { get; set; } = string.Empty;
 }
 
 /// <summary>Authentication metadata for generic clients.</summary>
@@ -181,4 +297,33 @@ public class StorefrontAuthContractDto
 
     /// <summary>Gets or sets privileged roles.</summary>
     public List<string> PrivilegedRoles { get; set; } = new();
+}
+
+/// <summary>Store context contract for future multi-store clients.</summary>
+public class StorefrontContextDto
+{
+    /// <summary>Gets or sets the default storefront key.</summary>
+    public string DefaultStorefrontKey { get; set; } = "default";
+
+    /// <summary>Gets or sets the header clients can send when multi-store routing is enabled.</summary>
+    public string HeaderName { get; set; } = "X-Storefront-Key";
+
+    /// <summary>Gets or sets how the server resolves store context.</summary>
+    public string ResolutionStrategy { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets whether this deployment currently supports multiple stores.</summary>
+    public bool SupportsMultiStore { get; set; }
+}
+
+/// <summary>Default SEO metadata for generic clients.</summary>
+public class StorefrontSeoDto
+{
+    /// <summary>Gets or sets default page title.</summary>
+    public string DefaultTitle { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets default meta description.</summary>
+    public string DefaultDescription { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets default keywords.</summary>
+    public List<string> Keywords { get; set; } = new();
 }

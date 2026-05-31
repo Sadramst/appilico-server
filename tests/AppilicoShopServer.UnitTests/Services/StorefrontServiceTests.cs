@@ -18,7 +18,14 @@ public class StorefrontServiceTests
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
         result.Data!.EngineName.Should().Be("AppilicoShopServer");
+        result.Data.StorefrontKey.Should().Be("default");
+        result.Data.StorefrontMode.Should().Be("single-store");
         result.Data.Brand.StoreName.Should().Be("Appilico Shop");
+        result.Data.Brand.Tagline.Should().NotBeNullOrWhiteSpace();
+        result.Data.Brand.SupportEmail.Should().Be("support@appilico.com.au");
+        result.Data.Brand.LegalLinks.Should().Contain(link => link.Id == "privacy" && link.Url == "/privacy");
+        result.Data.Context.HeaderName.Should().Be("X-Storefront-Key");
+        result.Data.Seo.DefaultTitle.Should().Be("Appilico Shop");
         result.Data.ApiVersion.Should().Be("v1");
         result.Data.GeneratedAtUtc.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
@@ -46,34 +53,134 @@ public class StorefrontServiceTests
     }
 
     [Fact]
+    public async Task GetConfigAsync_DefaultOptions_ReturnsClientSafeThemeAndNavigation()
+    {
+        var service = CreateService();
+
+        var result = await service.GetConfigAsync();
+
+        result.Data!.Theme.ColorTokens.Should().ContainKey("primary");
+        result.Data.Theme.TypographyTokens.Should().ContainKey("headingFont");
+        result.Data.Theme.SpacingTokens.Should().ContainKey("cardRadius");
+        result.Data.Theme.HomepageSections.Should().ContainInOrder("hero", "featuredProducts", "categoryRail");
+        result.Data.Locale.SupportedLocales.Should().Equal("en-AU");
+        result.Data.Navigation.Links.Should().Contain(link => link.Id == "catalog" && link.Path == "/products");
+        result.Data.Navigation.Links.Should().Contain(link => link.Id == "account" && link.RequiresAuth);
+    }
+
+    [Fact]
     public async Task GetConfigAsync_CustomOptions_OverridesStorefrontMetadata()
     {
         var service = CreateService(new StorefrontOptions
         {
+            StorefrontKey = "demo-shop",
             StoreName = "Reusable Demo Shop",
+            Tagline = "Reusable demo tagline",
+            LogoUrl = "https://cdn.example.test/logo.svg",
+            FaviconUrl = "https://cdn.example.test/favicon.ico",
+            SupportEmail = "support@example.test",
+            SupportPhone = "+61 400 000 000",
+            TimeZone = "Europe/Berlin",
             ApiBasePath = "api/v2",
             PublicBaseUrl = "https://shop.example.test",
             Currency = "EUR",
             Country = "DE",
             DefaultLocale = "de-DE",
-            SupportedLocales = new List<string> { "de-DE", "en-GB" },
+            SupportedLocales = new List<string> { "de-DE", "en-GB", "de-DE" },
             ThemePreset = "quiet-luxury",
+            LayoutPreset = "editorial-commerce",
+            ProductCardStyle = "compact",
+            ThemeColors = new Dictionary<string, string>
+            {
+                ["primary"] = "#101010",
+                ["accent"] = "#f97316"
+            },
+            HomepageSections = new List<string> { "hero", "featuredProducts", "hero" },
+            NavigationLinks = new List<StorefrontNavigationLinkOptions>
+            {
+                new() { Id = "shop", Label = "Shop", Path = "/shop", Slot = "primary", SortOrder = 10 },
+                new() { Id = "vip", Label = "VIP", Path = "/vip", Slot = "account", SortOrder = 20, RequiresAuth = true }
+            },
+            SocialLinks = new List<StorefrontLinkOptions>
+            {
+                new() { Id = "instagram", Label = "Instagram", Url = "https://instagram.example.test", Icon = "instagram", OpenInNewTab = true }
+            },
+            LegalLinks = new List<StorefrontLinkOptions>
+            {
+                new() { Id = "returns", Label = "Returns", Url = "/policies/returns" }
+            },
+            StoreContextHeaderName = "X-Shop-Key",
+            StoreContextResolutionStrategy = "host-or-header",
+            SupportsMultiStore = true,
+            DefaultSeoTitle = "Reusable Demo Shop",
+            DefaultSeoDescription = "Demo SEO description",
+            SeoKeywords = new List<string> { "demo", "shop" },
+            ShippingStrategy = "flat-rate",
+            TaxStrategy = "vat-inclusive",
+            ReturnsPolicyUrl = "/policies/returns",
+            TermsUrl = "/policies/terms",
+            PrivacyUrl = "/policies/privacy",
             EnableWishlist = false,
             EnableReviews = false
         });
 
         var result = await service.GetConfigAsync();
 
+        result.Data!.StorefrontKey.Should().Be("demo-shop");
         result.Data!.Brand.StoreName.Should().Be("Reusable Demo Shop");
+        result.Data.Brand.Tagline.Should().Be("Reusable demo tagline");
+        result.Data.Brand.LogoUrl.Should().Be("https://cdn.example.test/logo.svg");
+        result.Data.Brand.FaviconUrl.Should().Be("https://cdn.example.test/favicon.ico");
         result.Data.Brand.PublicBaseUrl.Should().Be("https://shop.example.test");
+        result.Data.Brand.SupportEmail.Should().Be("support@example.test");
+        result.Data.Brand.SupportPhone.Should().Be("+61 400 000 000");
+        result.Data.Brand.TimeZone.Should().Be("Europe/Berlin");
+        result.Data.Brand.SocialLinks.Should().ContainSingle(link => link.Id == "instagram" && link.OpenInNewTab);
+        result.Data.Brand.LegalLinks.Should().ContainSingle(link => link.Url == "/policies/returns");
         result.Data.Locale.Currency.Should().Be("EUR");
         result.Data.Locale.Country.Should().Be("DE");
         result.Data.Locale.DefaultLocale.Should().Be("de-DE");
         result.Data.Locale.SupportedLocales.Should().Equal("de-DE", "en-GB");
         result.Data.Theme.Preset.Should().Be("quiet-luxury");
+        result.Data.Theme.LayoutPreset.Should().Be("editorial-commerce");
+        result.Data.Theme.ProductCardStyle.Should().Be("compact");
+        result.Data.Theme.ColorTokens.Should().Contain("primary", "#101010");
+        result.Data.Theme.HomepageSections.Should().Equal("hero", "featuredProducts");
+        result.Data.Navigation.Links.Should().Contain(link => link.Id == "vip" && link.RequiresAuth);
+        result.Data.Context.HeaderName.Should().Be("X-Shop-Key");
+        result.Data.Context.ResolutionStrategy.Should().Be("host-or-header");
+        result.Data.Context.SupportsMultiStore.Should().BeTrue();
+        result.Data.Seo.Keywords.Should().Equal("demo", "shop");
+        result.Data.Checkout.ShippingStrategy.Should().Be("flat-rate");
+        result.Data.Checkout.TaxStrategy.Should().Be("vat-inclusive");
+        result.Data.Checkout.ReturnsPolicyUrl.Should().Be("/policies/returns");
         result.Data.Capabilities.Wishlist.Should().BeFalse();
         result.Data.Capabilities.Reviews.Should().BeFalse();
         result.Data.Endpoints.Should().Contain(endpoint => endpoint.Path == "/api/v2/products");
+    }
+
+    [Fact]
+    public async Task GetThemeAsync_ReturnsStandaloneThemeContract()
+    {
+        var service = CreateService(new StorefrontOptions
+        {
+            ThemePreset = "brand-a",
+            LayoutPreset = "dense-catalog",
+            ProductCardStyle = "quick-buy",
+            ThemeColors = new Dictionary<string, string>
+            {
+                ["primary"] = "#0f766e"
+            }
+        });
+
+        var result = await service.GetThemeAsync();
+
+        result.Success.Should().BeTrue();
+        result.Data!.Preset.Should().Be("brand-a");
+        result.Data.LayoutPreset.Should().Be("dense-catalog");
+        result.Data.ProductCardStyle.Should().Be("quick-buy");
+        result.Data.ColorTokens.Should().Contain("primary", "#0f766e");
+        result.Data.ProductCardFields.Should().Contain("basePrice");
     }
 
     [Fact]
@@ -104,6 +211,7 @@ public class StorefrontServiceTests
         endpointIds.Should().Contain(result.Data.Checkout.CreateOrderEndpointId);
         endpointIds.Should().Contain(result.Data.Checkout.CreatePaymentEndpointId);
         result.Data.Navigation.Slots.Should().Contain(new[] { "primary", "mobile", "footer", "account" });
+        result.Data.Navigation.Links.Select(link => link.Id).Should().Contain(new[] { "home", "catalog", "account" });
     }
 
     [Theory]
@@ -123,6 +231,8 @@ public class StorefrontServiceTests
 
     public static IEnumerable<object[]> ExpectedEndpointContracts()
     {
+        yield return Endpoint("storefront.config", "GET", "/api/storefront/config", false);
+        yield return Endpoint("storefront.theme", "GET", "/api/storefront/theme", false);
         yield return Endpoint("auth.register", "POST", "/api/auth/register", false);
         yield return Endpoint("auth.login", "POST", "/api/auth/login", false);
         yield return Endpoint("auth.refresh", "POST", "/api/auth/refresh-token", false);
