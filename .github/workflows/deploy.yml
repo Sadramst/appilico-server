@@ -81,13 +81,34 @@ jobs:
                 rm -f "$deploy_root"/nginx/conf.d/*.bak "$deploy_root"/nginx/conf.d/*.backup 2>/dev/null || true
               fi
 
+              api_container_for_nginx=$(docker compose ps -q api 2>/dev/null || true)
+              api_network=""
+              if [ -n "$api_container_for_nginx" ]; then
+                api_network=$(docker inspect "$api_container_for_nginx" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' 2>/dev/null | head -n 1)
+              fi
+
+              if ! docker ps -a --format '{{.Names}}' | grep -qx appilico-nginx; then
+                nginx_args="--name appilico-nginx --restart unless-stopped -p 80:80 -p 443:443"
+                if [ -n "$api_network" ]; then
+                  nginx_args="$nginx_args --network $api_network"
+                fi
+                if [ -d "$deploy_root/nginx/conf.d" ]; then
+                  nginx_args="$nginx_args -v $deploy_root/nginx/conf.d:/etc/nginx/conf.d:ro"
+                fi
+                certbot_webroot_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_webroot$' || true)
+                certbot_certs_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_certs$' || true)
+                if [ -n "$certbot_webroot_volume" ]; then
+                  nginx_args="$nginx_args -v $certbot_webroot_volume:/var/www/certbot:ro"
+                fi
+                if [ -n "$certbot_certs_volume" ]; then
+                  nginx_args="$nginx_args -v $certbot_certs_volume:/etc/letsencrypt:ro"
+                fi
+                docker run -d $nginx_args nginx:alpine || true
+              fi
+
               if docker ps -a --format '{{.Names}}' | grep -qx appilico-nginx; then
-                api_container_for_nginx=$(docker compose ps -q api 2>/dev/null || true)
-                if [ -n "$api_container_for_nginx" ]; then
-                  api_network=$(docker inspect "$api_container_for_nginx" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' 2>/dev/null | head -n 1)
-                  if [ -n "$api_network" ]; then
-                    docker network connect "$api_network" appilico-nginx || true
-                  fi
+                if [ -n "$api_network" ]; then
+                  docker network connect "$api_network" appilico-nginx || true
                 fi
                 docker restart appilico-nginx || true
               fi
