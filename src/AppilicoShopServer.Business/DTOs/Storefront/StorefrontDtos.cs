@@ -144,6 +144,9 @@ public class StorefrontThemeDto
 
     /// <summary>Gets or sets generic homepage section keys.</summary>
     public List<string> HomepageSections { get; set; } = new();
+
+    /// <summary>Gets or sets the structured, ordered homepage layout for page-builder clients.</summary>
+    public List<StorefrontSectionDto> HomepageLayout { get; set; } = new();
 }
 
 /// <summary>Feature capability metadata.</summary>
@@ -275,6 +278,12 @@ public class StorefrontCheckoutPolicyDto
 
     /// <summary>Gets or sets tax strategy key clients can display generically.</summary>
     public string TaxStrategy { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the structured shipping policy clients can compute against.</summary>
+    public StorefrontShippingConfigDto Shipping { get; set; } = new();
+
+    /// <summary>Gets or sets the structured tax policy clients can compute against.</summary>
+    public StorefrontTaxConfigDto Tax { get; set; } = new();
 
     /// <summary>Gets or sets returns policy URL or path.</summary>
     public string ReturnsPolicyUrl { get; set; } = string.Empty;

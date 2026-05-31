@@ -1,8 +1,11 @@
 using AppilicoShopServer.Business.Options;
 using AppilicoShopServer.Business.Services;
 using AppilicoShopServer.Domain.Constants;
+using AppilicoShopServer.Domain.Entities;
+using AppilicoShopServer.Domain.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace AppilicoShopServer.UnitTests.Services;
 
@@ -117,6 +120,8 @@ public class StorefrontServiceTests
             SeoKeywords = new List<string> { "demo", "shop" },
             ShippingStrategy = "flat-rate",
             TaxStrategy = "vat-inclusive",
+            Shipping = new StorefrontShippingPolicyOptions { Strategy = "flat-rate" },
+            Tax = new StorefrontTaxPolicyOptions { Strategy = "vat-inclusive" },
             ReturnsPolicyUrl = "/policies/returns",
             TermsUrl = "/policies/terms",
             PrivacyUrl = "/policies/privacy",
@@ -265,7 +270,12 @@ public class StorefrontServiceTests
 
     private static StorefrontService CreateService(StorefrontOptions? options = null)
     {
-        return new StorefrontService(Microsoft.Extensions.Options.Options.Create(options ?? new StorefrontOptions()));
+        var repo = new Mock<IAppSettingRepository>();
+        repo.Setup(r => r.GetByKeyAsync(It.IsAny<string>())).ReturnsAsync((AppSetting?)null);
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.Setup(u => u.Settings).Returns(repo.Object);
+        unitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        return new StorefrontService(Microsoft.Extensions.Options.Options.Create(options ?? new StorefrontOptions()), unitOfWork.Object);
     }
 
     private static object[] Endpoint(string id, string method, string path, bool requiresAuth)

@@ -189,6 +189,12 @@ public class StorefrontOptions
     /// <summary>Tax strategy key for clients.</summary>
     public string TaxStrategy { get; set; } = "configured-by-server";
 
+    /// <summary>Default shipping policy used when no persisted override exists.</summary>
+    public StorefrontShippingPolicyOptions Shipping { get; set; } = new();
+
+    /// <summary>Default tax policy used when no persisted override exists.</summary>
+    public StorefrontTaxPolicyOptions Tax { get; set; } = new();
+
     /// <summary>Returns policy URL or path.</summary>
     public string ReturnsPolicyUrl { get; set; } = "/returns";
 
@@ -255,4 +261,48 @@ public class StorefrontNavigationLinkOptions
 
     /// <summary>Optional required role.</summary>
     public string RequiredRole { get; set; } = string.Empty;
+}
+
+/// <summary>Default shipping policy options for the storefront engine.</summary>
+public class StorefrontShippingPolicyOptions
+{
+    /// <summary>Shipping strategy: flat | free | threshold | weight.</summary>
+    public string Strategy { get; set; } = "threshold";
+
+    /// <summary>Flat shipping rate applied when not free.</summary>
+    public decimal FlatRate { get; set; } = 9.99m;
+
+    /// <summary>Subtotal at or above which shipping is free (0 disables).</summary>
+    public decimal FreeShippingThreshold { get; set; } = 80m;
+
+    /// <summary>Per-kilogram rate for the weight strategy.</summary>
+    public decimal PerKgRate { get; set; } = 0m;
+
+    /// <summary>Additional fixed handling fee.</summary>
+    public decimal HandlingFee { get; set; } = 0m;
+
+    /// <summary>Shipping currency.</summary>
+    public string Currency { get; set; } = "AUD";
+
+    /// <summary>Client-facing shipping label.</summary>
+    public string Label { get; set; } = "Standard Shipping";
+}
+
+/// <summary>Default tax policy options for the storefront engine.</summary>
+public class StorefrontTaxPolicyOptions
+{
+    /// <summary>Tax strategy: none | percentage | inclusive.</summary>
+    public string Strategy { get; set; } = "percentage";
+
+    /// <summary>Tax rate percentage.</summary>
+    public decimal RatePercent { get; set; } = 10m;
+
+    /// <summary>Whether catalog prices already include tax.</summary>
+    public bool PricesIncludeTax { get; set; }
+
+    /// <summary>Whether tax also applies to shipping.</summary>
+    public bool AppliesToShipping { get; set; }
+
+    /// <summary>Client-facing tax label.</summary>
+    public string Label { get; set; } = "GST";
 }
