@@ -52,8 +52,16 @@ jobs:
             echo "api_network=$api_network"
             echo "certbot_webroot_volume=$certbot_webroot_volume"
             echo "certbot_certs_volume=$certbot_certs_volume"
+            echo "host_webroot_dir=$(test -d /var/www/certbot && echo present || echo missing)"
+            echo "host_letsencrypt_dir=$(test -d /etc/letsencrypt && echo present || echo missing)"
+            echo "host_certificate=$(test -f /etc/letsencrypt/live/api.appilico.com/fullchain.pem && echo present || echo missing)"
             docker volume ls --format '{{.Name}}' | grep -E 'certbot|letsencrypt|appilico' || true
             find "$deploy_root/nginx/conf.d" -maxdepth 1 -type f -print 2>/dev/null || true
+            for config_file in "$deploy_root"/nginx/conf.d/*.conf; do
+              [ -f "$config_file" ] || continue
+              echo "--- $config_file ---"
+              sed -n '1,180p' "$config_file"
+            done
 
             docker rm -f appilico-nginx 2>/dev/null || true
 
@@ -77,12 +85,21 @@ jobs:
 
             docker run -d $nginx_args nginx:alpine
             docker inspect appilico-nginx --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}'
+            docker logs --tail=100 appilico-nginx || true
             if [ "$(docker inspect appilico-nginx --format '{{.State.Status}}')" != "running" ]; then
               docker logs --tail=100 appilico-nginx || true
               exit 1
             fi
-            docker exec appilico-nginx nginx -t
-            docker restart appilico-nginx
+            docker exec appilico-nginx nginx -t || {
+              docker inspect appilico-nginx --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' || true
+              docker logs --tail=100 appilico-nginx || true
+              exit 1
+            }
+            docker restart appilico-nginx || {
+              docker inspect appilico-nginx --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' || true
+              docker logs --tail=100 appilico-nginx || true
+              exit 1
+            }
             docker ps --filter name=appilico-nginx --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
             curl -kfsS --resolve api.appilico.com:443:127.0.0.1 https://api.appilico.com/health/live \
               || curl -fsS http://localhost/health/live
