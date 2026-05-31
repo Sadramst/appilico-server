@@ -40,7 +40,7 @@ jobs:
 
               for path in /api/products /api/categories/tree /api/brands; do
                 echo "GET $path"
-                docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" || true
+                docker exec "$api_container" sh -lc "curl --max-time 20 --connect-timeout 5 -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" || true
               done
             fi
 

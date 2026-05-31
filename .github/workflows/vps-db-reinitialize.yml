@@ -68,7 +68,7 @@ jobs:
             echo 'Verifying rebuilt catalog endpoints locally'
             for path in /api/products /api/categories/tree /api/brands; do
               echo "GET $path"
-              docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" | head -c 1600
+              docker exec "$api_container" sh -lc "curl --max-time 20 --connect-timeout 5 -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" | head -c 1600
               echo
             done
 
