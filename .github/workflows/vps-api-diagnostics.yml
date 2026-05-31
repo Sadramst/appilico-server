@@ -42,5 +42,5 @@ jobs:
             fi
 
             echo '--- database table snapshot ---'
-            docker compose exec -T postgres psql -U appilico -d appilicodb -c "select table_name from information_schema.tables where table_schema='public' and table_name in ('Products','Categories','Brands','ProductImages','ProductVariants','AppSettings') order by table_name;" || true
-            docker compose exec -T postgres psql -U appilico -d appilicodb -c "select 'Products' as table_name, count(*) from \"Products\" union all select 'Categories', count(*) from \"Categories\" union all select 'Brands', count(*) from \"Brands\";" || true
+            docker compose exec -T postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "select table_name from information_schema.tables where table_schema='"'"'public'"'"' and table_name in ('"'"'Products'"'"','"'"'Categories'"'"','"'"'Brands'"'"','"'"'ProductImages'"'"','"'"'ProductVariants'"'"','"'"'AppSettings'"'"') order by table_name;"' || true
+            docker compose exec -T postgres sh -lc 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "select '"'"'Products'"'"' as table_name, count(*) from \"Products\" union all select '"'"'Categories'"'"', count(*) from \"Categories\" union all select '"'"'Brands'"'"', count(*) from \"Brands\";"' || true
