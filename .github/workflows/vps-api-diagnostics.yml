@@ -35,6 +35,9 @@ jobs:
             echo '--- local endpoint checks ---'
             api_container=$(docker compose ps -q api 2>/dev/null || true)
             if [ -n "$api_container" ]; then
+              echo '--- api sanitized database environment ---'
+              docker exec "$api_container" sh -lc 'env | grep -E "^(ConnectionStrings__DefaultConnection|DB_CONNECTION_STRING|POSTGRES_USER|POSTGRES_DB)=" | sed -E "s/(Password=)[^;]*/\1***/g"' || true
+
               for path in /api/products /api/categories/tree /api/brands; do
                 echo "GET $path"
                 docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" || true
