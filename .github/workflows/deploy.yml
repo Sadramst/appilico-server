@@ -120,8 +120,15 @@ jobs:
                 if [ -n "$api_network" ]; then
                   docker network connect "$api_network" appilico-nginx || true
                 fi
-                docker restart appilico-nginx || true
-                nginx_state=$(docker inspect appilico-nginx --format '{{.State.Status}}' 2>/dev/null || echo missing)
+                nginx_state=missing
+                for nginx_attempt in 1 2 3 4 5; do
+                  docker restart appilico-nginx || true
+                  sleep 3
+                  nginx_state=$(docker inspect appilico-nginx --format '{{.State.Status}}' 2>/dev/null || echo missing)
+                  if [ "$nginx_state" = "running" ]; then
+                    break
+                  fi
+                done
                 if [ "$nginx_state" != "running" ]; then
                   docker logs --tail=100 appilico-nginx 2>/dev/null || true
                   exit 1
@@ -237,12 +244,12 @@ jobs:
             remove_stale_api_containers
             docker compose up -d api
             api_container=$(docker compose ps -q api)
-            for attempt in $(seq 1 40); do
+            for attempt in $(seq 1 80); do
               status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
               if [ "$status" = "healthy" ]; then
                 break
               fi
-              if [ "$attempt" = "40" ]; then
+              if [ "$attempt" = "80" ]; then
                 docker compose logs --tail=100 api
                 exit 1
               fi
