@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script_stop: true
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
             set -euo pipefail
 
@@ -62,6 +62,38 @@ jobs:
               echo "--- $config_file ---"
               sed -n '1,180p' "$config_file"
             done
+
+            certificate_available=false
+            if [ -f /etc/letsencrypt/live/api.appilico.com.au/fullchain.pem ]; then
+              certificate_available=true
+            elif [ -n "$certbot_certs_volume" ]; then
+              if docker run --rm -v "$certbot_certs_volume:/etc/letsencrypt:ro" alpine:3.20 test -f /etc/letsencrypt/live/api.appilico.com.au/fullchain.pem; then
+                certificate_available=true
+              fi
+            fi
+
+            if [ "$certificate_available" != "true" ]; then
+              echo "Bootstrapping missing Let's Encrypt certificate"
+              docker rm -f appilico-nginx 2>/dev/null || true
+              docker volume create certbot_webroot >/dev/null
+              docker volume create certbot_certs >/dev/null
+              docker run --rm \
+                -p 80:80 \
+                -v certbot_certs:/etc/letsencrypt \
+                -v certbot_webroot:/var/www/certbot \
+                certbot/certbot certonly \
+                --standalone \
+                --preferred-challenges http \
+                --cert-name api.appilico.com.au \
+                -d api.appilico.com.au \
+                -d api.appilico.com \
+                --email m.sadra.mst@gmail.com \
+                --agree-tos \
+                --no-eff-email \
+                --non-interactive
+              certbot_webroot_volume=certbot_webroot
+              certbot_certs_volume=certbot_certs
+            fi
 
             docker rm -f appilico-nginx 2>/dev/null || true
 
