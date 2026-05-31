@@ -1,0 +1,102 @@
+name: Repair VPS DB Connection
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repair-db-connection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repair API DB connection via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            cd /opt/appilico
+            touch .env
+
+            write_env_key() {
+              key="$1"
+              value="$2"
+              tmp_file=$(mktemp)
+              found=false
+              while IFS= read -r line || [ -n "$line" ]; do
+                case "$line" in
+                  "$key="*)
+                    if [ "$found" = false ]; then
+                      printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+                      found=true
+                    fi
+                    ;;
+                  *) printf '%s\n' "$line" >> "$tmp_file" ;;
+                esac
+              done < .env
+              if [ "$found" = false ]; then
+                printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+              fi
+              mv "$tmp_file" .env
+            }
+
+            postgres_container=$(docker compose ps -q postgres)
+            if [ -z "$postgres_container" ]; then
+              echo 'Postgres container was not found.'
+              exit 1
+            fi
+
+            postgres_user=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_USER:-postgres}"')
+            postgres_db=$(docker exec "$postgres_container" sh -lc 'printf %s "${POSTGRES_DB:-postgres}"')
+            postgres_password=$(docker exec "$postgres_container" sh -lc 'printf %s "$POSTGRES_PASSWORD"')
+
+            if [ -z "$postgres_password" ]; then
+              echo 'Postgres container does not expose POSTGRES_PASSWORD.'
+              exit 1
+            fi
+
+            write_env_key POSTGRES_USER "$postgres_user"
+            write_env_key POSTGRES_DB "$postgres_db"
+            write_env_key POSTGRES_PASSWORD "$postgres_password"
+            write_env_key DB_CONNECTION_STRING "Host=postgres;Port=5432;Database=$postgres_db;Username=$postgres_user;Password=$postgres_password"
+            chmod 600 .env
+
+            printf '%s\n' \
+              'services:' \
+              '  api:' \
+              '    environment:' \
+              '      ASPNETCORE_ENVIRONMENT: Production' \
+              '      ASPNETCORE_URLS: http://+:8080' \
+              '      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}' \
+              '      JWT__Secret: ${JWT_SECRET}' \
+              '      JWT__Issuer: AppilicoShopServer' \
+              '      JWT__Audience: Appilico.Client' \
+              > docker-compose.override.yml
+
+            echo "Using Postgres database '$postgres_db' with user '$postgres_user'."
+
+            docker compose up -d --force-recreate api
+            api_container=$(docker compose ps -q api)
+            for attempt in $(seq 1 40); do
+              status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
+              if [ "$status" = "healthy" ]; then
+                break
+              fi
+              if [ "$attempt" = "40" ]; then
+                docker compose logs --tail=120 api
+                exit 1
+              fi
+              sleep 3
+            done
+
+            for path in /api/products /api/categories/tree /api/brands; do
+              echo "GET $path"
+              docker exec "$api_container" sh -lc "curl -sS -w '\nHTTP %{http_code}\n' http://localhost:8080$path" | head -c 1200
+              echo
+            done

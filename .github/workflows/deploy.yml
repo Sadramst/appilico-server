@@ -131,14 +131,62 @@ jobs:
 
             ensure_runtime_config() {
               touch .env
+
+              read_env_key() {
+                grep -m1 "^$1=" .env 2>/dev/null | cut -d= -f2- || true
+              }
+
+              extract_connection_value() {
+                printf '%s' "$current_db_connection" | tr ';' '\n' | awk -F= -v key="$1" 'tolower($1) == tolower(key) { sub("^[^=]*=", ""); print; exit }'
+              }
+
+              write_env_key() {
+                key="$1"
+                value="$2"
+                tmp_file=$(mktemp)
+                found=false
+                while IFS= read -r line || [ -n "$line" ]; do
+                  case "$line" in
+                    "$key="*)
+                      if [ "$found" = false ]; then
+                        printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+                        found=true
+                      fi
+                      ;;
+                    *) printf '%s\n' "$line" >> "$tmp_file" ;;
+                  esac
+                done < .env
+                if [ "$found" = false ]; then
+                  printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+                fi
+                mv "$tmp_file" .env
+              }
+
               current_jwt=$(grep -m1 '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2- || true)
               if [ ${#current_jwt} -lt 32 ] || printf '%s' "$current_jwt" | grep -Eqi 'placeholder|will-be-overridden|development'; then
                 new_jwt=$(openssl rand -base64 64 | tr -d '\n')
-                if grep -q '^JWT_SECRET=' .env; then
-                  sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$new_jwt|" .env
-                else
-                  printf '\nJWT_SECRET=%s\n' "$new_jwt" >> .env
-                fi
+                write_env_key JWT_SECRET "$new_jwt"
+              fi
+
+              current_db_connection=$(read_env_key DB_CONNECTION_STRING)
+              postgres_password=$(read_env_key POSTGRES_PASSWORD)
+              postgres_user=$(read_env_key POSTGRES_USER)
+              postgres_db=$(read_env_key POSTGRES_DB)
+              if [ -z "$postgres_user" ]; then
+                postgres_user=$(extract_connection_value Username)
+              fi
+              if [ -z "$postgres_db" ]; then
+                postgres_db=$(extract_connection_value Database)
+              fi
+              postgres_user=${postgres_user:-appilico}
+              postgres_db=${postgres_db:-appilicodb}
+              if [ -n "$postgres_password" ]; then
+                write_env_key POSTGRES_USER "$postgres_user"
+                write_env_key POSTGRES_DB "$postgres_db"
+                write_env_key DB_CONNECTION_STRING "Host=postgres;Port=5432;Database=$postgres_db;Username=$postgres_user;Password=$postgres_password"
+              elif [ -z "$current_db_connection" ]; then
+                echo "POSTGRES_PASSWORD or DB_CONNECTION_STRING must be set in /opt/appilico/.env"
+                exit 1
               fi
               chmod 600 .env
 
@@ -148,6 +196,7 @@ jobs:
                 '    environment:' \
                 '      ASPNETCORE_ENVIRONMENT: Production' \
                 '      ASPNETCORE_URLS: http://+:8080' \
+                '      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}' \
                 '      JWT__Secret: ${JWT_SECRET}' \
                 '      JWT__Issuer: AppilicoShopServer' \
                 '      JWT__Audience: Appilico.Client' \
