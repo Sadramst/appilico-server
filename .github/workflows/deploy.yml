@@ -144,21 +144,8 @@ jobs:
                 key="$1"
                 value="$2"
                 tmp_file=$(mktemp)
-                found=false
-                while IFS= read -r line || [ -n "$line" ]; do
-                  case "$line" in
-                    "$key="*)
-                      if [ "$found" = false ]; then
-                        printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
-                        found=true
-                      fi
-                      ;;
-                    *) printf '%s\n' "$line" >> "$tmp_file" ;;
-                  esac
-                done < .env
-                if [ "$found" = false ]; then
-                  printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
-                fi
+                grep -v "^${key}=" .env > "$tmp_file" 2>/dev/null || true
+                printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
                 mv "$tmp_file" .env
               }
 
