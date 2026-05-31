@@ -99,9 +99,13 @@ jobs:
                 certbot_certs_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_certs$' || true)
                 if [ -n "$certbot_webroot_volume" ]; then
                   nginx_args="$nginx_args -v $certbot_webroot_volume:/var/www/certbot:ro"
+                elif [ -d /var/www/certbot ]; then
+                  nginx_args="$nginx_args -v /var/www/certbot:/var/www/certbot:ro"
                 fi
                 if [ -n "$certbot_certs_volume" ]; then
                   nginx_args="$nginx_args -v $certbot_certs_volume:/etc/letsencrypt:ro"
+                elif [ -d /etc/letsencrypt ]; then
+                  nginx_args="$nginx_args -v /etc/letsencrypt:/etc/letsencrypt:ro"
                 fi
                 docker run -d $nginx_args nginx:alpine || true
               fi
@@ -111,6 +115,11 @@ jobs:
                   docker network connect "$api_network" appilico-nginx || true
                 fi
                 docker restart appilico-nginx || true
+                nginx_state=$(docker inspect appilico-nginx --format '{{.State.Status}}' 2>/dev/null || echo missing)
+                if [ "$nginx_state" != "running" ]; then
+                  docker logs --tail=100 appilico-nginx 2>/dev/null || true
+                  exit 1
+                fi
               fi
             }
 

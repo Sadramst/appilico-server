@@ -66,14 +66,18 @@ jobs:
             fi
             if [ -n "$certbot_webroot_volume" ]; then
               nginx_args="$nginx_args -v $certbot_webroot_volume:/var/www/certbot:ro"
+            elif [ -d /var/www/certbot ]; then
+              nginx_args="$nginx_args -v /var/www/certbot:/var/www/certbot:ro"
             fi
             if [ -n "$certbot_certs_volume" ]; then
               nginx_args="$nginx_args -v $certbot_certs_volume:/etc/letsencrypt:ro"
+            elif [ -d /etc/letsencrypt ]; then
+              nginx_args="$nginx_args -v /etc/letsencrypt:/etc/letsencrypt:ro"
             fi
 
             docker run -d $nginx_args nginx:alpine
             docker inspect appilico-nginx --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}'
-            if [ "$(docker inspect appilico-nginx --format '{{.State.Running}}')" != "true" ]; then
+            if [ "$(docker inspect appilico-nginx --format '{{.State.Status}}')" != "running" ]; then
               docker logs --tail=100 appilico-nginx || true
               exit 1
             fi
