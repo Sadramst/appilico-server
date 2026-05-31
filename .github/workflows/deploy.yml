@@ -134,7 +134,7 @@ jobs:
                 mv "$backup_dir" "$current_dir"
                 cd "$deploy_root"
                 remove_stale_api_containers
-                docker compose up -d --build --remove-orphans api || true
+                docker compose up -d --build api || true
                 repair_nginx || true
               fi
               exit "$exit_code"
@@ -162,7 +162,7 @@ jobs:
 
             echo "Starting api service"
             remove_stale_api_containers
-            docker compose up -d --remove-orphans api
+            docker compose up -d api
             api_container=$(docker compose ps -q api)
             for attempt in $(seq 1 40); do
               status=$(docker inspect --format='{{.State.Health.Status}}' "$api_container" 2>/dev/null || echo starting)
