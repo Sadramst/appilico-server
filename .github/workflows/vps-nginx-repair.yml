@@ -30,6 +30,12 @@ jobs:
                 -e 's/backend:8080/api:8080/g' \
                 "$deploy_root"/nginx/conf.d/*.conf 2>/dev/null || true
               rm -f "$deploy_root"/nginx/conf.d/*.bak "$deploy_root"/nginx/conf.d/*.backup 2>/dev/null || true
+              if grep -Rqs 'limit_req zone=' "$deploy_root/nginx/conf.d" && ! grep -Rqs 'limit_req_zone' "$deploy_root/nginx/conf.d"; then
+                printf '%s\n' \
+                  'limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;' \
+                  'limit_req_zone $binary_remote_addr zone=auth:10m rate=5r/m;' \
+                  > "$deploy_root/nginx/conf.d/00-rate-limit-zones.conf"
+              fi
             fi
 
             api_container=$(docker compose ps -q api 2>/dev/null || true)
