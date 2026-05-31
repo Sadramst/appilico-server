@@ -1,0 +1,73 @@
+name: Repair VPS nginx
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repair-nginx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repair nginx via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            deploy_root=/opt/appilico
+            cd "$deploy_root"
+
+            if [ -d "$deploy_root/nginx/conf.d" ]; then
+              sed -i \
+                -e 's/api:5000/api:8080/g' \
+                -e 's/backend:8080/api:8080/g' \
+                "$deploy_root"/nginx/conf.d/*.conf 2>/dev/null || true
+              rm -f "$deploy_root"/nginx/conf.d/*.bak "$deploy_root"/nginx/conf.d/*.backup 2>/dev/null || true
+            fi
+
+            api_container=$(docker compose ps -q api 2>/dev/null || true)
+            if [ -z "$api_container" ]; then
+              docker compose up -d api || true
+              api_container=$(docker compose ps -q api 2>/dev/null || true)
+            fi
+
+            api_network=""
+            if [ -n "$api_container" ]; then
+              api_network=$(docker inspect "$api_container" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' 2>/dev/null | head -n 1)
+            fi
+
+            certbot_webroot_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_webroot$' || true)
+            certbot_certs_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_certs$' || true)
+
+            docker rm -f appilico-nginx 2>/dev/null || true
+
+            nginx_args="--name appilico-nginx --restart unless-stopped -p 80:80 -p 443:443"
+            if [ -n "$api_network" ]; then
+              nginx_args="$nginx_args --network $api_network"
+            fi
+            if [ -d "$deploy_root/nginx/conf.d" ]; then
+              nginx_args="$nginx_args -v $deploy_root/nginx/conf.d:/etc/nginx/conf.d:ro"
+            fi
+            if [ -n "$certbot_webroot_volume" ]; then
+              nginx_args="$nginx_args -v $certbot_webroot_volume:/var/www/certbot:ro"
+            fi
+            if [ -n "$certbot_certs_volume" ]; then
+              nginx_args="$nginx_args -v $certbot_certs_volume:/etc/letsencrypt:ro"
+            fi
+
+            docker run -d $nginx_args nginx:alpine
+            if [ -n "$api_network" ]; then
+              docker network connect "$api_network" appilico-nginx || true
+            fi
+            docker exec appilico-nginx nginx -t
+            docker restart appilico-nginx
+            docker ps --filter name=appilico-nginx --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            curl -kfsS --resolve api.appilico.com:443:127.0.0.1 https://api.appilico.com/health/live \
+              || curl -fsS http://localhost/health/live
