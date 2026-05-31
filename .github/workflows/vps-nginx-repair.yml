@@ -42,9 +42,18 @@ jobs:
             if [ -n "$api_container" ]; then
               api_network=$(docker inspect "$api_container" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' 2>/dev/null | head -n 1)
             fi
+            if [ -z "$api_network" ]; then
+              api_network=$(docker network ls --format '{{.Name}}' | grep -m1 '^appilico' || true)
+            fi
 
             certbot_webroot_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_webroot$' || true)
             certbot_certs_volume=$(docker volume ls --format '{{.Name}}' | grep -m1 'certbot_certs$' || true)
+
+            echo "api_network=$api_network"
+            echo "certbot_webroot_volume=$certbot_webroot_volume"
+            echo "certbot_certs_volume=$certbot_certs_volume"
+            docker volume ls --format '{{.Name}}' | grep -E 'certbot|letsencrypt|appilico' || true
+            find "$deploy_root/nginx/conf.d" -maxdepth 1 -type f -print 2>/dev/null || true
 
             docker rm -f appilico-nginx 2>/dev/null || true
 
@@ -63,8 +72,10 @@ jobs:
             fi
 
             docker run -d $nginx_args nginx:alpine
-            if [ -n "$api_network" ]; then
-              docker network connect "$api_network" appilico-nginx || true
+            docker inspect appilico-nginx --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}'
+            if [ "$(docker inspect appilico-nginx --format '{{.State.Running}}')" != "true" ]; then
+              docker logs --tail=100 appilico-nginx || true
+              exit 1
             fi
             docker exec appilico-nginx nginx -t
             docker restart appilico-nginx
