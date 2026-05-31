@@ -177,6 +177,7 @@ jobs:
             cd "$deploy_root"
             sed -i 's/ASPNETCORE_ENVIRONMENT=Development/ASPNETCORE_ENVIRONMENT=Production/g' docker-compose.yml .env 2>/dev/null || true
             ensure_runtime_config
+            repair_nginx
 
             echo "Building api service"
             docker compose build api
